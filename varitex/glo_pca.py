@@ -26,7 +26,7 @@ def fit_pca_in_npy_file(source_file, target_dir, n_pca, latent_dim,batch_size):
     #pca = IncrementalPCA(n_components=latent_dim, batch_size=batch_size)
     #pca.fit(images_pca)
     ipca = IncrementalPCA(n_components=latent_dim)
-    for idx in tqdm(len(images)):
+    for idx in tqdm(range(len(images))):
         X = images[idx*batch_size: (idx+1)*batch_size]
         images_pca = np.vstack([x.reshape(((x).size)) for x in X])
         ipca.partial_fit(images_pca)
