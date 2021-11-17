@@ -21,10 +21,16 @@ def fit_pca_in_dataloader(dataLoader, target_dir, n_pca, latent_dim):
 
 def fit_pca_in_npy_file(source_file, target_dir, n_pca, latent_dim,batch_size):
     images = np.load(source_file, mmap_mode='r')
-    images_pca = np.vstack([x.reshape(((x).size)) for x in images[:n_pca]])
+    #images_pca = np.vstack([x.reshape(((x).size)) for x in images[:n_pca]])
     print('Fitting PCA')
-    pca = IncrementalPCA(n_components=latent_dim, batch_size=batch_size)
-    pca.fit(images_pca)
+    #pca = IncrementalPCA(n_components=latent_dim, batch_size=batch_size)
+    #pca.fit(images_pca)
+    ipca = IncrementalPCA(n_components=latent_dim)
+    for idx in tqdm(len(images)):
+        X = images[idx*batch_size: (idx+1)*batch_size]
+        images_pca = np.vstack([x.reshape(((x).size)) for x in X])
+        ipca.partial_fit(images_pca)
+    print('Applying PCA')
     Z = np.empty((len(images), latent_dim))
     for idx, X in tqdm(zip(range(len(images)), images), 'pca projection', total=len(images)):
         Z[idx] = pca.transform(X.reshape(1,(X).size))
@@ -47,7 +53,7 @@ if __name__ =="__main__":
     parser.add_argument('--source_path',  help='Path of the npy file dataset or dataset for DataLoader',default=None)
     parser.add_argument('--latent_dim', type=int, help='Dimension of latent space', default=256)
     parser.add_argument('--target_path',  help='Path of where to save resulting latent codes',default='pcaLatents.npy')
-    parser.add_argument('--batch_size', type=int, help='batch size for incremental pca', default=None)
+    parser.add_argument('--batch_size', type=int, help='batch size for incremental pca', default=5000)
     parser.add_argument('--dataLoader', help='One of either "DataLoader" or "NumpyFile", dependent on how you want to load the data', default='NumpyFile')
     args=parser.parse_args()
     print(args.n_pca)
