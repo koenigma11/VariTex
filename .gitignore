@@ -133,3 +133,5 @@ lightning_logs
 res
 cfg_*.py
 pretrained
+#npy files
+*.npy
