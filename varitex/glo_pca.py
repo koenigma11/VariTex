@@ -33,7 +33,7 @@ def fit_pca_in_npy_file(source_file, target_dir, n_pca, latent_dim,batch_size):
     print('Applying PCA')
     Z = np.empty((len(images), latent_dim))
     for idx, X in tqdm(zip(range(len(images)), images), 'pca projection', total=len(images)):
-        Z[idx] = pca.transform(X.reshape(1,(X).size))
+        Z[idx] = ipca.transform(X.reshape(1,(X).size))
     np.save(target_dir, Z)
     
 

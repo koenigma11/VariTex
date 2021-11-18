@@ -1,0 +1,49 @@
+
+Sender: LSF System <lsfadmin@eu-c7-111-12>
+Subject: Job 192418971: <python glo_pca.py --n_pca 70000> in cluster <euler> Exited
+
+Job <python glo_pca.py --n_pca 70000> was submitted from host <eu-login-26> by user <koenigma> in cluster <euler> at Wed Nov 17 15:54:15 2021
+Job was executed on host(s) <8*eu-c7-111-12>, in queue <normal.24h>, as user <koenigma> in cluster <euler> at Wed Nov 17 15:54:45 2021
+</cluster/home/koenigma> was used as the home directory.
+</cluster/project/infk/hilliges/koenigma/VariTex/varitex> was used as the working directory.
+Started at Wed Nov 17 15:54:45 2021
+Terminated at Thu Nov 18 01:36:30 2021
+Results reported at Thu Nov 18 01:36:30 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+python glo_pca.py --n_pca 70000
+------------------------------------------------------------
+
+Exited with exit code 1.
+
+Resource usage summary:
+
+    CPU time :                                   34544.39 sec.
+    Max Memory :                                 40796 MB
+    Average Memory :                             31875.38 MB
+    Total Requested Memory :                     49152.00 MB
+    Delta Memory :                               8356.00 MB
+    Max Swap :                                   5259 MB
+    Max Processes :                              3
+    Max Threads :                                5
+    Run time :                                   34935 sec.
+    Turnaround time :                            34935 sec.
+
+The output (if any) follows:
+
+70000
+Fitting PCA
+  0%|          | 0/14 [00:00<?, ?it/s]  7%|▋         | 1/14 [37:15<8:04:18, 2235.29s/it] 14%|█▍        | 2/14 [1:18:25<7:54:42, 2373.55s/it] 21%|██▏       | 3/14 [2:00:43<7:28:55, 2448.70s/it] 29%|██▊       | 4/14 [2:43:12<6:54:40, 2488.06s/it] 36%|███▌      | 5/14 [3:24:46<6:13:32, 2490.28s/it] 43%|████▎     | 6/14 [4:06:20<5:32:13, 2491.73s/it] 50%|█████     | 7/14 [4:48:38<4:52:27, 2506.83s/it] 57%|█████▋    | 8/14 [5:30:18<4:10:26, 2504.47s/it] 64%|██████▍   | 9/14 [6:11:33<3:27:56, 2495.29s/it] 71%|███████▏  | 10/14 [6:52:57<2:46:06, 2491.73s/it] 79%|███████▊  | 11/14 [7:34:15<2:04:23, 2487.78s/it] 86%|████████▌ | 12/14 [8:16:43<1:23:31, 2505.89s/it] 93%|█████████▎| 13/14 [8:59:07<41:57, 2517.62s/it]  100%|██████████| 14/14 [9:41:40<00:00, 2528.18s/it]100%|██████████| 14/14 [9:41:40<00:00, 2492.89s/it]
+Applying PCA
+pca projection:   0%|          | 0/70000 [00:00<?, ?it/s]pca projection:   0%|          | 0/70000 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "/cluster/project/infk/hilliges/koenigma/VariTex/varitex/glo_pca.py", line 63, in <module>
+    fit_pca_transform_to_npy(source_file, args.target_path, args.n_pca, args.latent_dim, args.dataLoader, args.batch_size)
+  File "/cluster/project/infk/hilliges/koenigma/VariTex/varitex/glo_pca.py", line 45, in fit_pca_transform_to_npy
+    fit_pca_in_npy_file(source_file, target_dir, n_pca, latent_dim,batch_size)
+  File "/cluster/project/infk/hilliges/koenigma/VariTex/varitex/glo_pca.py", line 36, in fit_pca_in_npy_file
+    Z[idx] = pca.transform(X.reshape(1,(X).size))
+NameError: name 'pca' is not defined

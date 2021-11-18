@@ -1,0 +1,74 @@
+Sender: LSF System <lsfadmin@eu-c7-117-08>
+Subject: Job 192377062: <python glo_pca.py --n_pca 70000 --batch_size 350> in cluster <euler> Exited
+
+Job <python glo_pca.py --n_pca 70000 --batch_size 350> was submitted from host <eu-login-37> by user <koenigma> in cluster <euler> at Wed Nov 17 10:45:30 2021
+Job was executed on host(s) <8*eu-c7-117-08>, in queue <normal.4h>, as user <koenigma> in cluster <euler> at Wed Nov 17 10:46:00 2021
+</cluster/home/koenigma> was used as the home directory.
+</cluster/project/infk/hilliges/koenigma/VariTex/varitex> was used as the working directory.
+Started at Wed Nov 17 10:46:00 2021
+Terminated at Wed Nov 17 10:52:04 2021
+Results reported at Wed Nov 17 10:52:04 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+python glo_pca.py --n_pca 70000 --batch_size 350
+------------------------------------------------------------
+
+TERM_MEMLIMIT: job killed after reaching LSF memory usage limit.
+Exited with exit code 137.
+
+Resource usage summary:
+
+    CPU time :                                   46.90 sec.
+    Max Memory :                                 26576 MB
+    Average Memory :                             14295.64 MB
+    Total Requested Memory :                     16384.00 MB
+    Delta Memory :                               -10192.00 MB
+    Max Swap :                                   -
+    Max Processes :                              3
+    Max Threads :                                4
+    Run time :                                   372 sec.
+    Turnaround time :                            394 sec.
+
+The output (if any) follows:
+
+/cluster/shadow/.lsbatch/1637142330.192377062: line 8: 17716 Killed                  python glo_pca.py --n_pca 70000 --batch_size 350
+Sender: LSF System <lsfadmin@eu-c7-116-13>
+Subject: Job 192377385: <python glo_pca.py --n_pca 70000 --batch_size 350> in cluster <euler> Exited
+
+Job <python glo_pca.py --n_pca 70000 --batch_size 350> was submitted from host <eu-login-33> by user <koenigma> in cluster <euler> at Wed Nov 17 10:57:44 2021
+Job was executed on host(s) <8*eu-c7-116-13>, in queue <normal.24h>, as user <koenigma> in cluster <euler> at Wed Nov 17 10:58:10 2021
+</cluster/home/koenigma> was used as the home directory.
+</cluster/project/infk/hilliges/koenigma/VariTex/varitex> was used as the working directory.
+Started at Wed Nov 17 10:58:10 2021
+Terminated at Wed Nov 17 11:03:33 2021
+Results reported at Wed Nov 17 11:03:33 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+python glo_pca.py --n_pca 70000 --batch_size 350
+------------------------------------------------------------
+
+TERM_MEMLIMIT: job killed after reaching LSF memory usage limit.
+Exited with exit code 137.
+
+Resource usage summary:
+
+    CPU time :                                   64.29 sec.
+    Max Memory :                                 51152 MB
+    Average Memory :                             20996.77 MB
+    Total Requested Memory :                     32768.00 MB
+    Delta Memory :                               -18384.00 MB
+    Max Swap :                                   -
+    Max Processes :                              3
+    Max Threads :                                4
+    Run time :                                   330 sec.
+    Turnaround time :                            349 sec.
+
+The output (if any) follows:
+
+/cluster/shadow/.lsbatch/1637143064.192377385: line 8: 37241 Killed                  python glo_pca.py --n_pca 70000 --batch_size 350
