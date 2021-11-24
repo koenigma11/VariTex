@@ -1,5 +1,6 @@
 import torch
 from torch.nn import BCELoss
+import numpy as np
 
 from varitex.data.keys_enum import DataItemKey as DIK
 from varitex.modules.discriminator import MultiscaleDiscriminator
@@ -29,7 +30,20 @@ class PipelineModule(CustomModule):
         self.metric_psnr = PSNR()
         self.metric_ssim = SSIM()
         self.metric_lpips = LPIPS()
-
+        
+        if(self.glo_init=='pca'):
+            self.Z = np.load(getattr(self.opt, "pca_file"))
+        else:
+            #rnd initialization
+            self.Z = np.rand.randn(getattr(self.opt, "nTrainSamples", 70000), getattr((self,)))
+        
+    
+    def init_latent(self):
+        batch[DIK.STYLE_LATENT] = self.Z
+        #maybe use next(iter())
+    def proect_l2_ball
+        
+    
     def to_device(self, o, device='cuda'):
         if isinstance(o, list):
             o = [self.to_device(o_i, device) for o_i in o]
@@ -52,6 +66,9 @@ class PipelineModule(CustomModule):
         else:
             raise Warning("Invalid optimizer index: {}".format(optimizer_idx))
         return loss
+                
+    def training_step_glo(self, batch, batch_idx, optimizer_idx=0)
+                
 
     def validation_step(self, batch, batch_idx, std_multiplier=1):
         batch = self.forward(batch, batch_idx, std_multiplier=std_multiplier)

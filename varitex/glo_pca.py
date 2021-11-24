@@ -26,14 +26,15 @@ def fit_pca_in_npy_file(source_file, target_dir, n_pca, latent_dim,batch_size):
     #pca = IncrementalPCA(n_components=latent_dim, batch_size=batch_size)
     #pca.fit(images_pca)
     ipca = IncrementalPCA(n_components=latent_dim)
-    for idx in tqdm(range(len(images)// batch_size)):
+    #for idx in tqdm(range(len(images)// batch_size)):
+    for idx in tqdm(range(512//batch_size)):
         X = images[idx*batch_size: (idx+1)*batch_size]
         images_pca = np.vstack([x.reshape(((x).size)) for x in X])
         ipca.partial_fit(images_pca)
     print('Applying PCA')
     Z = np.empty((len(images), latent_dim))
     for idx, X in tqdm(zip(range(len(images)), images), 'pca projection', total=len(images)):
-        Z[idx] = pca.transform(X.reshape(1,(X).size))
+        Z[idx] = ipca.transform(X.reshape(1,(X).size))
     np.save(target_dir, Z)
     
 
@@ -58,6 +59,6 @@ if __name__ =="__main__":
     args=parser.parse_args()
     print(args.n_pca)
     if(args.source_path==None):
-        #source_file = '/home/matthias/ETH/Thesis/Data/FFHQ/preprocessed_dataset/images.npy'
-        source_file = '/cluster/work/hilliges/shared/face_datasets/FFHQ/preprocessed_dataset/images.npy'
+        source_file = '/home/matthias/ETH/Thesis/Data/FFHQ/preprocessed_dataset/images.npy'
+        #source_file = '/cluster/work/hilliges/shared/face_datasets/FFHQ/preprocessed_dataset/images.npy'
     fit_pca_transform_to_npy(source_file, args.target_path, args.n_pca, args.latent_dim, args.dataLoader, args.batch_size)
