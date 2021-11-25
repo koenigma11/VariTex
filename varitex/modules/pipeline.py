@@ -32,13 +32,12 @@ class PipelineModule(CustomModule):
         self.metric_psnr = PSNR()
         self.metric_ssim = SSIM()
         self.metric_lpips = LPIPS()
-        pdb.set_trace()
         if(self.opt.use_glo):
             #Quickly about embedding:
             #Takes in input shape (nSamples, latentDim)
             embedding_shape = np.array([getattr(self.opt, "nTrainSamples", 70000), getattr(self.opt, "latent_dim")])
             self.Z = Embedding(embedding_shape[0],embedding_shape[1], max_norm=1.)
-            if(self.glo_init=='pca'):
+            if(self.opt.glo_init=='pca'):
                 z = np.load(getattr(self.opt, "pca_file"))
             else:
                 #rnd initialization
@@ -55,7 +54,8 @@ class PipelineModule(CustomModule):
     def project_l2_ball(self, batch):
         """ project the vectors in z onto the l2 unit norm ball"""
         ##why even use cpu here? should I use to_device here? well no it should be a tensor right? embedding yes, zi's yes
-        batch = batch.data.cpu().numpy()
+        if not isinstance(batch, np.ndarray):
+            batch = batch.data.cpu().numpy()
         return batch / np.maximum(np.sqrt(np.sum(batch**2, axis=1))[:, np.newaxis], 1)
         
     
@@ -69,8 +69,10 @@ class PipelineModule(CustomModule):
         return o
 
     def forward(self, batch, batch_idx, std_multiplier=1):
-        if(self.opt.glo):
-            batch = self.Z(batch_idx)
+        #pdb.set_trace()
+        if(self.opt.use_glo):
+            batch_idxs = torch.arange(batch_idx*self.opt.batch_size,(batch_idx+1)*self.opt.batch_size, dtype=torch.long)
+            batch[DIK.STYLE_LATENT] = self.Z(batch_idxs.cuda())
         else:
             batch = batch
         batch = self.to_device(batch, self.opt.device)

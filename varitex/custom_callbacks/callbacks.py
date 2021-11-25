@@ -57,7 +57,8 @@ class ImageLogCallback(pl.Callback):
         self.log_image(pl_module.logger, "{}/interpolation/random_std2".format(prefix), vis, pl_module.global_step)
 
         batch2 = batch.copy()
-        batch2[DIK.STYLE_LATENT] = torch.zeros_like(batch[DIK.STYLE_LATENT]).to(batch[DIK.STYLE_LATENT].device)
+        if(not self.opt.use_glo):
+            batch2[DIK.STYLE_LATENT] = torch.zeros_like(batch[DIK.STYLE_LATENT]).to(batch[DIK.STYLE_LATENT].device)
         vis = self.visualizer_interpolation.visualize(pl_module, batch, batch2, n, bidirectional=False,
                                                       include_gt=False)
         self.log_image(pl_module.logger, "{}/interpolation/zeros".format(prefix), vis, pl_module.global_step)

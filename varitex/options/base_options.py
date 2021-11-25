@@ -54,6 +54,12 @@ class BaseOptions:
         parser.add_argument('--project', default="varitex", help="Project name for wandb logger")
         parser.add_argument('--debug', action="store_true",
                             help="Enable debug mode, i.e., running a fast_dev_run in the Trainer.")
+
+        # Some GLO options (look through with marcel if cleaner otpions are available)
+        parser.add_argument('--nTrainSamples', type=int, default=70000, help='Number of training samples.')
+        parser.add_argument('--pca_file', default=os.path.join(os.getenv("DP"), 'pcaLatents.npy'))
+        parser.add_argument('--use_glo', type=bool, default=True, help="Either use glo or an encoder.")
+        parser.add_argument('--glo_init', default="pca", help="Initialize the glo latent space from pca or randomly")
         self.initialized = True
         return parser
 

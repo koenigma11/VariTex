@@ -57,9 +57,10 @@ class Visualizer:
         raise Warning("Invalid return format: {}".format(return_format))
 
     def _sample(self, batch, std_multiplier):
-        q = torch.distributions.Normal(batch[DIK.STYLE_LATENT_MU], batch[DIK.STYLE_LATENT_STD] * std_multiplier)
-        z = q.rsample()
-        batch[DIK.STYLE_LATENT] = z
+        if(not self.opt.use_glo):
+            q = torch.distributions.Normal(batch[DIK.STYLE_LATENT_MU], batch[DIK.STYLE_LATENT_STD] * std_multiplier)
+            z = q.rsample()
+            batch[DIK.STYLE_LATENT] = z
         return batch
 
     def detach(self, o, to_cpu=False):

@@ -51,6 +51,8 @@ class Generator(CustomModule):
 
     def forward_sample_style(self, batch, batch_idx, std_multiplier=1):
         # Sample the latent code z from the given distribution.
+        if(self.opt.use_glo):
+            return batch
         mu, std = batch[DIK.STYLE_LATENT_MU], batch[DIK.STYLE_LATENT_STD]
 
         q = torch.distributions.Normal(mu, std * std_multiplier)
