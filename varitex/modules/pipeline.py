@@ -1,5 +1,7 @@
+import pdb
+
 import torch
-from torch.nn import BCELoss
+from torch.nn import BCELoss, Parameter, Embedding
 import numpy as np
 
 from varitex.data.keys_enum import DataItemKey as DIK
@@ -30,18 +32,31 @@ class PipelineModule(CustomModule):
         self.metric_psnr = PSNR()
         self.metric_ssim = SSIM()
         self.metric_lpips = LPIPS()
+        pdb.set_trace()
+        if(self.opt.use_glo):
+            #Quickly about embedding:
+            #Takes in input shape (nSamples, latentDim)
+            embedding_shape = np.array([getattr(self.opt, "nTrainSamples", 70000), getattr(self.opt, "latent_dim")])
+            self.Z = Embedding(embedding_shape[0],embedding_shape[1], max_norm=1.)
+            if(self.glo_init=='pca'):
+                z = np.load(getattr(self.opt, "pca_file"))
+            else:
+                #rnd initialization
+                z = np.rand.randn(embedding_shape[0],embedding_shape[1])
+            self.Z.weights = self.project_l2_ball(z)
+            del z
+            ##self.zi = (torch.zeros(self.opt.batch_size,embedding_shape[1]))
+            #self.zi = self.zi.cuda()  ##Do we need this?
+            #Is this correct here? Should we use just torch(...,req_grad=true)? or Variable? --> Deprecated
+            ##self.zi = Parameter(self.zi, requires_grad=True)
+
         
-        if(self.glo_init=='pca'):
-            self.Z = np.load(getattr(self.opt, "pca_file"))
-        else:
-            #rnd initialization
-            self.Z = np.rand.randn(getattr(self.opt, "nTrainSamples", 70000), getattr((self,)))
-        
-    
-    def init_latent(self):
-        batch[DIK.STYLE_LATENT] = self.Z
-        #maybe use next(iter())
-    def proect_l2_ball
+
+    def project_l2_ball(self, batch):
+        """ project the vectors in z onto the l2 unit norm ball"""
+        ##why even use cpu here? should I use to_device here? well no it should be a tensor right? embedding yes, zi's yes
+        batch = batch.data.cpu().numpy()
+        return batch / np.maximum(np.sqrt(np.sum(batch**2, axis=1))[:, np.newaxis], 1)
         
     
     def to_device(self, o, device='cuda'):
@@ -54,6 +69,10 @@ class PipelineModule(CustomModule):
         return o
 
     def forward(self, batch, batch_idx, std_multiplier=1):
+        if(self.opt.glo):
+            batch = self.Z(batch_idx)
+        else:
+            batch = batch
         batch = self.to_device(batch, self.opt.device)
         batch = self.generator(batch, batch_idx, std_multiplier)
         return batch
@@ -66,8 +85,7 @@ class PipelineModule(CustomModule):
         else:
             raise Warning("Invalid optimizer index: {}".format(optimizer_idx))
         return loss
-                
-    def training_step_glo(self, batch, batch_idx, optimizer_idx=0)
+
                 
 
     def validation_step(self, batch, batch_idx, std_multiplier=1):
@@ -112,7 +130,11 @@ class PipelineModule(CustomModule):
         # We use one optimizer for the generator and one for the discriminator.
         optimizers = list()
         # Important: Should have index 0
-        optimizers.append(torch.optim.Adam(self.generator.parameters(), lr=self.opt.lr))
+        if(self.opt.use_glo):
+            optimizers.append(torch.optim.Adam(list(self.generator.parameters()) + list(self.Z.parameters()), lr=self.opt.lr))
+        else:
+            optimizers.append(torch.optim.Adam(self.generator.parameters() , lr=self.opt.lr))
+
         if getattr(self.opt, "lambda_gan", 0) > 0:
             # Needs index 1
             optimizers.append(torch.optim.Adam(self.discriminator.parameters(),
@@ -131,8 +153,10 @@ class PipelineModule(CustomModule):
 
         image_out = batch[DIK.IMAGE_OUT]
         image_in = batch[DIK.IMAGE_IN]
-
-        loss_kl = kl_divergence(batch[DIK.STYLE_LATENT_MU], batch[DIK.STYLE_LATENT_STD]).mean()
+        if(self.opt.use_glo):
+            loss_kl=0
+        else:
+            loss_kl = kl_divergence(batch[DIK.STYLE_LATENT_MU], batch[DIK.STYLE_LATENT_STD]).mean()
 
         if getattr(self.opt, "lambda_gan", 0) > 0:
             pred_fake, pred_real = self._forward_discriminate(image_out, image_in)

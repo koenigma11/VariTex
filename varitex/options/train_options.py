@@ -1,5 +1,5 @@
 from varitex.options.base_options import BaseOptions
-
+import os
 
 class TrainOptions(BaseOptions):
 
@@ -27,4 +27,10 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--num_workers', type=int, default=1, help='Number of workers in dataloader')
         parser.add_argument('--display_freq', type=int, default=1000, help='Display images every X iterations')
         parser.add_argument('--max_epochs', type=int, default=44, help='Should converge in 44 epochs.')
+
+        #Some GLO options (look through with marcel if cleaner otpions are available)
+        parser.add_argument('nTrainSamples', type=int, default=70000, help='Number of training samples.')
+        parser.add_argument('pca_file', default=os.path.join(os.getenv("DP"), 'pcaLatents.npy'))
+        parser.add_argument('use_glo', type=bool, default=True, help = "Either use glo or an encoder.")
+
         return parser
