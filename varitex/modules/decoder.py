@@ -1,3 +1,5 @@
+import pdb
+
 import torch
 from pl_bolts.models.autoencoders.components import (
     DecoderBlock, Interpolate, resize_conv1x1, resize_conv3x3
@@ -61,7 +63,7 @@ class AdditiveDecoder(CustomModule):
 
 class SimpleResNetDecoder(nn.Module):
     """
-    Resnet in reverse order.
+    Resnet in reverse order. 1
     Most code from pl_bolts.models.autoencoders.components.
     """
 
@@ -81,14 +83,20 @@ class SimpleResNetDecoder(nn.Module):
         self.initial = self._make_layer(block, 256, layers[0], scale=2)
 
         self.layer0 = self._make_layer(block, 256, layers[0], scale=2)
-        self.layer1 = self._make_layer(block, 256, layers[0], scale=2)
-        self.layer2 = self._make_layer(block, 128, layers[1], scale=2)
+        if self.input_height == 64:
+            self.layer1 = self._make_layer(block, 128, layers[0], scale=2)
+            self.layer2 = self._make_layer(block, 64, layers[1], scale=2)
+        else:
+            self.layer1 = self._make_layer(block, 256, layers[0], scale=2)
+            self.layer2 = self._make_layer(block, 128, layers[1], scale=2)
         self.layer3 = self._make_layer(block, 64, layers[2], scale=2)
 
         if self.input_height == 128:
             self.layer4 = self._make_layer(block, 64, layers[3])
         elif self.input_height == 256:
             self.layer4 = self._make_layer(block, 64, layers[3], scale=2)
+        elif self.input_height==64:
+            pass
         else:
             raise Warning("Invalid input height: '{}".format(self.input_height))
 
@@ -104,6 +112,7 @@ class SimpleResNetDecoder(nn.Module):
         self.conv1 = nn.Conv2d(
             64 * block.expansion, nc_texture, kernel_size=3, stride=1, padding=1, bias=False
         )
+
 
     def _make_layer(self, block, planes, blocks, scale=1):
         """
@@ -141,8 +150,9 @@ class SimpleResNetDecoder(nn.Module):
         x = self.layer0(x)
         x = self.layer1(x)
         x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
+        if(self.input_height>64):
+            x = self.layer3(x)
+            x = self.layer4(x)
 
         x = self.conv1(x)
         return x
@@ -170,15 +180,22 @@ class EarlyConditionedSimpleRestNetDecocer(nn.Module):
 
         self.initial = self._make_layer(block, 512, layers[0], scale=2, condition_dim=self.condition_dim)
 
+
         self.layer0 = self._make_layer(block, 256, layers[0], scale=2, condition_dim=self.condition_dim)
-        self.layer1 = self._make_layer(block, 256, layers[0], scale=2, condition_dim=self.condition_dim)
-        self.layer2 = self._make_layer(block, 128, layers[1], scale=2, condition_dim=self.condition_dim)
+        if(self.input_height==64):
+            self.layer1 = self._make_layer(block, 128, layers[0], scale=2, condition_dim=self.condition_dim)
+            self.layer2 = self._make_layer(block, 64, layers[1], scale=2, condition_dim=self.condition_dim)
+        else:
+            self.layer1 = self._make_layer(block, 256, layers[0], scale=2, condition_dim=self.condition_dim)
+            self.layer2 = self._make_layer(block, 128, layers[1], scale=2, condition_dim=self.condition_dim)
         self.layer3 = self._make_layer(block, 64, layers[2], scale=2, condition_dim=self.condition_dim)
 
         if self.input_height == 128:
             self.layer4 = self._make_layer(block, 64, layers[3], condition_dim=self.condition_dim)
         elif self.input_height == 256:
             self.layer4 = self._make_layer(block, 64, layers[3], scale=2, condition_dim=self.condition_dim)
+        elif self.input_height == 64:
+            pass
         else:
             raise Warning("Invalid input height: '{}".format(self.input_height))
 
@@ -222,15 +239,15 @@ class EarlyConditionedSimpleRestNetDecocer(nn.Module):
         # We now have 512 feature maps with the same value in all spatial locations
         # self.inplanes changes when creating blocks
         x = x.view(x.shape[0], 512, 1, 1).expand(-1, -1, 4, 4)
-
         in_dict = {"features": x, "condition": condition}
         out_dict = self.initial(in_dict)
 
         out_dict = self.layer0(out_dict)
         out_dict = self.layer1(out_dict)
         out_dict = self.layer2(out_dict)
-        out_dict = self.layer3(out_dict)
-        out_dict = self.layer4(out_dict)
+        if(self.input_height>64):
+            out_dict = self.layer3(out_dict)
+            out_dict = self.layer4(out_dict)
         x = out_dict['features']
         x = self.conv1(x)
         return x
