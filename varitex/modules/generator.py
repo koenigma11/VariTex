@@ -25,9 +25,12 @@ class Generator(CustomModule):
         self.texture2image = Feature2ImageRenderer(opt)
 
     def forward(self, batch, batch_idx, std_multiplier=1):
-        batch = self.forward_encode(batch, batch_idx)  # Only encoding, not yet a distribution
-        batch = self.forward_encoded2latent_distribution(batch)  # Compute mu and std
-        batch = self.forward_sample_style(batch, batch_idx, std_multiplier=std_multiplier)  # Sample a latent code
+        if(self.opt.use_glo):
+            batch = batch
+        else:
+            batch = self.forward_encode(batch, batch_idx)  # Only encoding, not yet a distribution
+            batch = self.forward_encoded2latent_distribution(batch)  # Compute mu and std
+            batch = self.forward_sample_style(batch, batch_idx, std_multiplier=std_multiplier)  # Sample a latent code
         batch = self.forward_latent2image(batch, batch_idx)  # Decoders for face and exterior, followed by rendering
         return batch
 
@@ -48,6 +51,8 @@ class Generator(CustomModule):
 
     def forward_sample_style(self, batch, batch_idx, std_multiplier=1):
         # Sample the latent code z from the given distribution.
+        if(self.opt.use_glo):
+            return batch
         mu, std = batch[DIK.STYLE_LATENT_MU], batch[DIK.STYLE_LATENT_STD]
 
         q = torch.distributions.Normal(mu, std * std_multiplier)

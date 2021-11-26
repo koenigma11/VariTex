@@ -1,6 +1,7 @@
 import json
 import os
 
+import pdb
 import pytorch_lightning as pl
 import torch
 import wandb
@@ -57,6 +58,7 @@ if __name__ == "__main__":
     print("Using {} GPU".format(gpus))
     print("Writing results to {}".format(opt.path_out))
     mkdir(opt.path_out)
+
 
     if opt.logger == "wandb":
         wandb.login()

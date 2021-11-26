@@ -210,7 +210,7 @@ class NPYDataset(CustomDataset):
                 else:
                     img_tensor_clean[~mask_full_tensor_clean.expand_as(img_tensor_clean)] = 0
             #
-            return {
+            return { 
                 DIK.IMAGE_IN_ENCODE: img_tensor_clean,
                 DIK.IMAGE_IN: img_tensor,
                 DIK.SEGMENTATION_MASK: segmentation_tensor,

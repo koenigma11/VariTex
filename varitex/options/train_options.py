@@ -1,5 +1,5 @@
 from varitex.options.base_options import BaseOptions
-
+import os
 
 class TrainOptions(BaseOptions):
 
@@ -27,4 +27,7 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--num_workers', type=int, default=1, help='Number of workers in dataloader')
         parser.add_argument('--display_freq', type=int, default=1000, help='Display images every X iterations')
         parser.add_argument('--max_epochs', type=int, default=44, help='Should converge in 44 epochs.')
+
+
+
         return parser

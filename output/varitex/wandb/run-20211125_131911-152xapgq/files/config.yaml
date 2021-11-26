@@ -1,0 +1,181 @@
+wandb_version: 1
+
+_wandb:
+  desc: null
+  value:
+    cli_version: 0.12.2
+    framework: lightning
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    python_version: 3.8.5
+    start_time: 1637842751
+    t:
+      1:
+      - 1
+      - 5
+      - 9
+      3:
+      - 13
+      4: 3.8.5
+      5: 0.12.2
+      8:
+      - 5
+batch_size:
+  desc: null
+  value: 7
+bg_color:
+  desc: null
+  value: black
+checkpoint:
+  desc: null
+  value: None
+dataroot_npy:
+  desc: null
+  value: /home/matthias/ETH/Thesis/VariTexLocal/datasets/FFHQ/preprocessed_dataset
+dataset:
+  desc: null
+  value: FFHQ
+dataset_split:
+  desc: null
+  value: train
+debug:
+  desc: null
+  value: false
+device:
+  desc: null
+  value: cuda
+display_freq:
+  desc: null
+  value: 1000
+experiment_name:
+  desc: null
+  value: default
+feature2image_num_layers:
+  desc: null
+  value: 5
+gan_mode:
+  desc: null
+  value: ls
+glo_init:
+  desc: null
+  value: pca
+image_folder:
+  desc: null
+  value: /home/matthias/ETH/Thesis/VariTexLocal/datasets/FFHQ/images
+image_h:
+  desc: null
+  value: 256
+image_w:
+  desc: null
+  value: 256
+keep_background:
+  desc: null
+  value: false
+lambda_discriminator_features:
+  desc: null
+  value: 1
+lambda_gan:
+  desc: null
+  value: 1
+lambda_kl:
+  desc: null
+  value: 0.1
+lambda_l2:
+  desc: null
+  value: 1.0
+lambda_rgb_texture:
+  desc: null
+  value: 0.0
+lambda_segmentation:
+  desc: null
+  value: 1.0
+lambda_vgg:
+  desc: null
+  value: 2.0
+latent_dim:
+  desc: null
+  value: 256
+logger:
+  desc: null
+  value: wandb
+lr:
+  desc: null
+  value: 0.001
+lr_discriminator:
+  desc: null
+  value: 0.001
+max_epochs:
+  desc: null
+  value: 44
+nTrainSamples:
+  desc: null
+  value: 70000
+n_layers_discriminator:
+  desc: null
+  value: 4
+nc_decoder:
+  desc: null
+  value: 32
+nc_discriminator:
+  desc: null
+  value: 64
+nc_feature2image:
+  desc: null
+  value: 64
+norm_discriminator:
+  desc: null
+  value: spectralinstance
+num_discriminator:
+  desc: null
+  value: 2
+num_workers:
+  desc: null
+  value: 1
+path_bfm:
+  desc: null
+  value: /home/matthias/ETH/Thesis/VariTexLocal/datasets/basel_facemodel/model2017-1_face12_nomouth.h5
+path_out:
+  desc: null
+  value: /home/matthias/ETH/Thesis/VariTexLocal/VariTex/output/varitex
+path_uv:
+  desc: null
+  value: /home/matthias/ETH/Thesis/VariTexLocal/datasets/basel_facemodel/face12.json
+pca_file:
+  desc: null
+  value: /home/matthias/ETH/Thesis/VariTexLocal/datasets/pcaLatents.npy
+project:
+  desc: null
+  value: varitex
+semantic_regions:
+  desc: null
+  value:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+  - 12
+  - 13
+  - 14
+  - 15
+texture_dim:
+  desc: null
+  value: 256
+texture_nc:
+  desc: null
+  value: 16
+transform_mode:
+  desc: null
+  value: all
+use_glo:
+  desc: null
+  value: true
+uv_mask_value:
+  desc: null
+  value: 0.0
