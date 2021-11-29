@@ -25,10 +25,17 @@ class NPYDataset(CustomDataset):
         # We need to open it later again for the __getitem()__
         self.image_folder = self.opt.image_folder
 
-        self.dataroot_npy = opt.dataroot_npy
+        if opt.preprocessed_data:
+            self.dataroot_npy = opt.dataroot_npy_pre
+        else:
+            self.dataroot_npy = opt.dataroot_npy
         self.data = {
             key: np.load(os.path.join(self.dataroot_npy, "{}.npy".format(key)), 'r') for key in self.keys
         }
+
+        #load preprocessed data instead of original one
+        if opt.preprocessed_data:
+            self.data["images"] =np.load(os.path.join(self.dataroot_npy, "{}.npy".format("images")), 'r')
 
         # These are strings
         self.data["filename"] = np.load(os.path.join(self.dataroot_npy, "filename.npy"), allow_pickle=True)
@@ -161,10 +168,13 @@ class NPYDataset(CustomDataset):
         return torch.tensor(self.data['ep'][frame_id])
 
     def _read_image(self, filename, size):
-        path_image = os.path.join(self.image_folder, "{}.png".format(filename))
-        if not os.path.exists(path_image):
-            raise FileNotFoundError("This image has not been found: '{}'".format(path_image))
-        image_bgr = cv2.imread(path_image)
+        if self.opt.preprocessed_data:
+            image_bgr = self.data["images"][int(filename)]
+        else:
+            path_image = os.path.join(self.image_folder, "{}.png".format(filename))
+            if not os.path.exists(path_image):
+                raise FileNotFoundError("This image has not been found: '{}'".format(path_image))
+            image_bgr = cv2.imread(path_image)
         image = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
         image = cv2.resize(image, size, interpolation=cv2.INTER_LINEAR)
         return image
@@ -179,7 +189,10 @@ class NPYDataset(CustomDataset):
         else:
             affine_transform = None
         try:
-            image_raw = self._read_image(filename, (self.initial_width, self.initial_height))
+            if self.opt.preprocessed_data:
+                image_raw = self._read_image(filename, (self.initial_width, self.initial_height))
+            else:
+                image_raw = self._read_image(filename, (self.initial_width, self.initial_height))
             uv = self.data["uv"][frame_id].astype(np.float32)  # opencv expects float 32
             segmentation = self.data["segmentation"][frame_id]
 
