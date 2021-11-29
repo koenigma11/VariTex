@@ -32,6 +32,7 @@ class PipelineModule(CustomModule):
         self.metric_psnr = PSNR()
         self.metric_ssim = SSIM()
         self.metric_lpips = LPIPS()
+        pdb.set_trace()
         if(self.opt.use_glo):
             #Quickly about embedding:
             #Takes in input shape (nSamples, latentDim)
@@ -42,7 +43,7 @@ class PipelineModule(CustomModule):
             else:
                 #rnd initialization
                 z = np.rand.randn(embedding_shape[0],embedding_shape[1])
-            self.Z.weights = self.project_l2_ball(z)
+            self.Z.weight = Parameter(torch.from_numpy(self.project_l2_ball(z)))
             del z
             ##self.zi = (torch.zeros(self.opt.batch_size,embedding_shape[1]))
             #self.zi = self.zi.cuda()  ##Do we need this?
