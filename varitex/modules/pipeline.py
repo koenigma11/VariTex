@@ -32,14 +32,13 @@ class PipelineModule(CustomModule):
         self.metric_psnr = PSNR()
         self.metric_ssim = SSIM()
         self.metric_lpips = LPIPS()
-        pdb.set_trace()
         if(self.opt.use_glo):
             #Quickly about embedding:
             #Takes in input shape (nSamples, latentDim)
             embedding_shape = np.array([getattr(self.opt, "nTrainSamples", 70000), getattr(self.opt, "latent_dim")])
             self.Z = Embedding(embedding_shape[0],embedding_shape[1], max_norm=1.)
             if(self.opt.glo_init=='pca'):
-                z = np.load(getattr(self.opt, "pca_file"))
+                z = np.load(getattr(self.opt, "pca_file")).astype(np.single)
             else:
                 #rnd initialization
                 z = np.rand.randn(embedding_shape[0],embedding_shape[1])

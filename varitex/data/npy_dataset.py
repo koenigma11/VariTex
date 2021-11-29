@@ -233,9 +233,9 @@ class NPYDataset(CustomDataset):
                 DIK.FILENAME: filename,
                 DIK.COEFF_SHAPE: self.data["sp"][frame_id].copy().astype(np.float32),
                 DIK.COEFF_EXPRESSION: self.data["ep"][frame_id].copy().astype(np.float32),
-                DIK.R: torch.from_numpy(self.data["R"][frame_id].copy()).float(),
-                DIK.T: torch.from_numpy(self.data["t"][frame_id].copy()).float(),
-                DIK.SCALE: torch.from_numpy(self.data["s"][frame_id].copy()).float()
+                # DIK.R: torch.from_numpy(self.data["R"][frame_id].copy()).float(),
+                # DIK.T: torch.from_numpy(self.data["t"][frame_id].copy()).float(),
+                # DIK.SCALE: torch.from_numpy(self.data["s"][frame_id].copy()).float()
             }
         except ValueError as e:
             print("Value error when processing index {}".format(index))

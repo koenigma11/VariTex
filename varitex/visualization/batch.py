@@ -217,7 +217,7 @@ class UVVisualizer(Visualizer):
             return img_out
 
     def get_neutral_t(self, batch):
-        t = torch.Tensor((0, 0, batch[DIK.T][0, 2])).expand_as(batch[DIK.T])
+        t = torch.Tensor((0, 0, -57)).expand(batch[DIK.COEFF_SHAPE].shape[0],-1)
         return t
 
     def visualize_grid(self, pipeline, batch, batch_idx, deg_range, return_format=None):
@@ -228,9 +228,9 @@ class UVVisualizer(Visualizer):
             for theta_x in deg_range:
                 batch2 = batch.copy()
                 theta = [theta_x, theta_y, 0]
-                R = theta2rotation_matrix(theta_all=theta).to(batch2[DIK.R].device).unsqueeze(0)
+                R = theta2rotation_matrix(theta_all=theta).to(batch2[DIK.COEFF_SHAPE].device).unsqueeze(0)
                 t = self.get_neutral_t(batch)
-                uv = self.bfm_uv_factory.getUV(R=R, t=t, s=batch2[DIK.SCALE], sp=batch2[DIK.COEFF_SHAPE],
+                uv = self.bfm_uv_factory.getUV(R=R, t=t, s=torch.tensor([0.1]).expand(t.shape[0],1), sp=batch2[DIK.COEFF_SHAPE],
                                                ep=batch2[DIK.COEFF_EXPRESSION])
 
                 batch2[DIK.UV_RENDERED] = uv.expand_as(batch[DIK.UV_RENDERED]).to(batch[DIK.UV_RENDERED].device)
@@ -253,7 +253,7 @@ class UVVisualizer(Visualizer):
             theta = [0, 0, 0]
             for i in range(len(axis)):
                 theta[axis[i]] = theta_d
-            R = theta2rotation_matrix(theta_all=theta).to(batch2[DIK.R].device).unsqueeze(0)
+            R = theta2rotation_matrix(theta_all=theta).to(batch2[DIK.COEFF_SHAPE].device).unsqueeze(0)
             t = self.get_neutral_t(batch)
             uv = self.bfm_uv_factory.getUV(R=R, t=t, s=batch2[DIK.SCALE], sp=batch2[DIK.COEFF_SHAPE],
                                            ep=batch2[DIK.COEFF_EXPRESSION])
