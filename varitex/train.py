@@ -38,7 +38,6 @@ if __name__ == "__main__":
         # We need to set this again
         opt_new.checkpoint = path_checkpoint
         opt = opt_new
-
     if opt.dataset_split == "all":
         # The dataset has no splits or we want to use the full dataset.
         dataset = NPYDataset(opt, split="all", augmentation=True)
@@ -49,8 +48,8 @@ if __name__ == "__main__":
         train_dataset, val_dataset = NPYDataset(opt, split="train", augmentation=True), NPYDataset(opt, split="val",
                                                                                                    augmentation=False)
         train_dataloader = DataLoader(train_dataset, batch_size=opt.batch_size, num_workers=opt.num_workers,
-                                      shuffle=True)
-        val_dataloader = DataLoader(val_dataset, batch_size=opt.batch_size, num_workers=opt.num_workers, shuffle=False)
+                                      shuffle=True, drop_last=True)
+        val_dataloader = DataLoader(val_dataset, batch_size=opt.batch_size, num_workers=opt.num_workers, shuffle=False,drop_last=True)
         do_validation = True
 
     pipeline = PipelineModule(opt)

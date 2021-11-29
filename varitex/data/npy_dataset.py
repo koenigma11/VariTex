@@ -1,4 +1,5 @@
 import os
+import pdb
 
 import cv2
 import numpy as np
@@ -172,7 +173,6 @@ class NPYDataset(CustomDataset):
         frame_id = self.indices[index]  # We keep the dataset splits loaded as indices
         filename = self.data["filename"][frame_id]
         height, width = self.opt.image_h, self.opt.image_w
-
         if self.augmentation:
             # Create a random affine transform for each iteration, but use the same transform for all in- and outputs
             affine_transform = CustomRandomAffine([self.initial_width, self.initial_height], **self.transform_params)

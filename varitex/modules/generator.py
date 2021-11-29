@@ -1,3 +1,5 @@
+import pdb
+
 import torch
 
 from varitex.data.keys_enum import DataItemKey as DIK
@@ -105,6 +107,7 @@ class Generator(CustomModule):
         return batch
 
     def sample_texture(self, batch):
+        #pdb.set_trace()
         uv_texture = batch[DIK.TEXTURE_PERSON]
         uv_map = batch[DIK.UV_RENDERED]
 
