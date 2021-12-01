@@ -15,9 +15,6 @@ from varitex.data.custom_dataset import CustomDataset
 
 
 class NPYDataset(CustomDataset):
-    # Rotation, translation, scale, shape, expression, segmentation, uv
-    keys = ["R", "t", "s", "sp", "ep", "segmentation", "uv"]
-    #keys = ["sp", "ep", "segmentation", "uv"]
     def __init__(self, opt, *args, **kwargs):
         super().__init__(opt, *args, **kwargs)
         # We need to call this to set self.__len()__
@@ -25,18 +22,14 @@ class NPYDataset(CustomDataset):
         # We need to open it later again for the __getitem()__
         self.image_folder = self.opt.image_folder
 
-        if opt.preprocessed_data:
-            self.dataroot_npy = opt.dataroot_npy_pre
-        else:
-            self.dataroot_npy = opt.dataroot_npy
-        self.data = {
-            key: np.load(os.path.join(self.dataroot_npy, "{}.npy".format(key)), 'r') for key in self.keys
-        }
+        self.dataroot_npy = opt.dataroot_npy
 
-        #load preprocessed data instead of original one
-        if opt.preprocessed_data:
-            self.data["images"] =np.load(os.path.join(self.dataroot_npy, "{}.npy".format("images")), 'r')
-
+        self.data = dict()
+        self.data['sp'] = np.load(os.path.join(self.dataroot_npy, "sp.npy"), 'r')
+        self.data['ep'] = np.load(os.path.join(self.dataroot_npy, "ep.npy"), 'r')
+        self.data["images"] = np.memmap(os.path.join(self.dataroot_npy, "images.dat"), mode='r', dtype=np.float16, shape=(69991, 256, 256, 3))
+        self.data["uv"] = np.memmap(os.path.join(self.dataroot_npy, "uv.dat"), mode='r', dtype=np.float16, shape=(69991, 256, 256, 2))
+        self.data["segmentation"] = np.memmap(os.path.join(self.dataroot_npy, "segmentation.dat"), mode='r', dtype=np.uint8, shape=(69991, 256, 256))
         # These are strings
         self.data["filename"] = np.load(os.path.join(self.dataroot_npy, "filename.npy"), allow_pickle=True)
         self.data["dataset_splits"] = np.load(os.path.join(self.dataroot_npy, "dataset_splits.npz"), allow_pickle=True)
@@ -167,32 +160,18 @@ class NPYDataset(CustomDataset):
     def preprocess_expressions(self, frame_id):
         return torch.tensor(self.data['ep'][frame_id])
 
-    def _read_image(self, filename, size):
-        if self.opt.preprocessed_data:
-            image_bgr = self.data["images"][int(filename)]
-        else:
-            path_image = os.path.join(self.image_folder, "{}.png".format(filename))
-            if not os.path.exists(path_image):
-                raise FileNotFoundError("This image has not been found: '{}'".format(path_image))
-            image_bgr = cv2.imread(path_image)
-        image = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
-        image = cv2.resize(image, size, interpolation=cv2.INTER_LINEAR)
-        return image
-
     def __getitem__(self, index):
         frame_id = self.indices[index]  # We keep the dataset splits loaded as indices
         filename = self.data["filename"][frame_id]
         height, width = self.opt.image_h, self.opt.image_w
         if self.augmentation:
             # Create a random affine transform for each iteration, but use the same transform for all in- and outputs
-            affine_transform = CustomRandomAffine([self.initial_width, self.initial_height], **self.transform_params)
+            affine_transform = CustomRandomAffine([height, width], **self.transform_params)
         else:
             affine_transform = None
         try:
-            if self.opt.preprocessed_data:
-                image_raw = self._read_image(filename, (self.initial_width, self.initial_height))
-            else:
-                image_raw = self._read_image(filename, (self.initial_width, self.initial_height))
+            image_raw = self.data["images"][frame_id].copy().astype(np.uint8)
+
             uv = self.data["uv"][frame_id].astype(np.float32)  # opencv expects float 32
             segmentation = self.data["segmentation"][frame_id]
 
@@ -233,9 +212,6 @@ class NPYDataset(CustomDataset):
                 DIK.FILENAME: filename,
                 DIK.COEFF_SHAPE: self.data["sp"][frame_id].copy().astype(np.float32),
                 DIK.COEFF_EXPRESSION: self.data["ep"][frame_id].copy().astype(np.float32),
-                # DIK.R: torch.from_numpy(self.data["R"][frame_id].copy()).float(),
-                # DIK.T: torch.from_numpy(self.data["t"][frame_id].copy()).float(),
-                # DIK.SCALE: torch.from_numpy(self.data["s"][frame_id].copy()).float()
             }
         except ValueError as e:
             print("Value error when processing index {}".format(index))
@@ -260,8 +236,7 @@ class NPYDataset(CustomDataset):
 
     def get_raw_image(self, index):
         frame_id = self.indices[index]  # We keep the dataset splits loaded as indices
-        filename = self.data["filename"][frame_id]
-        image_raw = self._read_image(filename, (self.initial_width, self.initial_height))
+        image_raw = self.data["images"][frame_id].copy().astype(np.uint8)
 
         height, width = self.opt.image_h, self.opt.image_w
         return self._apply_transforms(image_raw, height, width)

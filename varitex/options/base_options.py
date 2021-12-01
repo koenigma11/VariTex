@@ -60,8 +60,6 @@ class BaseOptions:
         parser.add_argument('--pca_file', default=os.path.join(os.getenv("BP"), 'datasets/pcaLatents.npy'))
         parser.add_argument('--use_glo', action="store_true",  help="Either use glo or an encoder. Default is False!!")
         parser.add_argument('--glo_init', default="pca", help="Initialize the glo latent space from pca or randomly")
-        parser.add_argument('--preprocessed_data', action="store_true",
-                            help="Load preprocessed data")
         parser.add_argument('--dataroot_npy_pre',  default=os.path.join(os.getenv("DP"), 'FFHQ/preprocessed_dataset_old'),
                             help='Path to the folder with the preprocessed datasets. Should contain .npy files "R", "t", "s", "sp", "ep", "segmentation", "uv", "filename","images", and a .npz file "dataset_splits".')
         self.initialized = True
