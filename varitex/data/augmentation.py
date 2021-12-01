@@ -8,10 +8,10 @@ from torchvision.transforms import RandomAffine
 
 
 class CustomRandomAffine(RandomAffine):
-    def __init__(self, img_size, flip_p=0, *args, **kwargs):
+    def __init__(self, img_size, flip_p=0, resample=PIL.Image.BILINEAR, *args, **kwargs):
         if not "degrees" in kwargs:
             kwargs["degrees"] = 0
-        super().__init__(*args, **kwargs)
+        super().__init__(resample=resample, *args, **kwargs)
         self.ret = self.get_params(self.degrees, self.translate, self.scale, self.shear, img_size)
         self.flip = numpy.random.rand(1) < flip_p
 
