@@ -27,6 +27,7 @@ if __name__ == "__main__":
     pl.seed_everything(1234)
 
     opt = TrainOptions().parse()
+
     if opt.checkpoint is not None:
         # We load from a checkpoint, so let's load the opt as well
         path_checkpoint = opt.checkpoint

@@ -17,7 +17,7 @@ from varitex.data.custom_dataset import CustomDataset
 class NPYDataset(CustomDataset):
     # Rotation, translation, scale, shape, expression, segmentation, uv
     keys = ["R", "t", "s", "sp", "ep", "segmentation", "uv"]
-
+    #keys = ["sp", "ep", "segmentation", "uv"]
     def __init__(self, opt, *args, **kwargs):
         super().__init__(opt, *args, **kwargs)
         # We need to call this to set self.__len()__
