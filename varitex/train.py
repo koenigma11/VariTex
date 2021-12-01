@@ -42,14 +42,14 @@ if __name__ == "__main__":
     if opt.dataset_split == "all":
         # The dataset has no splits or we want to use the full dataset.
         dataset = NPYDataset(opt, split="all", augmentation=True)
-        dataloader = DataLoader(dataset, batch_size=opt.batch_size, num_workers=opt.num_workers, shuffle=True)
+        dataloader = DataLoader(dataset, batch_size=opt.batch_size, num_workers=opt.num_workers, shuffle=False)
         do_validation = False
     else:
         # Separate dataloaders for train and validation.
         train_dataset, val_dataset = NPYDataset(opt, split="train", augmentation=True), NPYDataset(opt, split="val",
                                                                                                    augmentation=False)
         train_dataloader = DataLoader(train_dataset, batch_size=opt.batch_size, num_workers=opt.num_workers,
-                                      shuffle=True, drop_last=True)
+                                      shuffle=False, drop_last=True)
         val_dataloader = DataLoader(val_dataset, batch_size=opt.batch_size, num_workers=opt.num_workers, shuffle=False,drop_last=True)
         do_validation = True
 
