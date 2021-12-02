@@ -5,6 +5,7 @@ import pdb
 import pytorch_lightning as pl
 import torch
 import wandb
+from mutil.pytorch_utils import ImageNetNormalizeTransformInverse
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger, TensorBoardLogger
 from torch.utils.data import DataLoader
@@ -59,8 +60,8 @@ if __name__ == "__main__":
     print("Writing results to {}".format(opt.path_out))
     mkdir(opt.path_out)
 
-
     if opt.logger == "wandb":
+        wandb.init(entity=opt.wandb_team, project=opt.wandb_project, name=opt.experiment_name)
         wandb.login()
         logger = pl.loggers.WandbLogger(save_dir=opt.path_out, name=opt.experiment_name, project=opt.project)
         logger.log_hyperparams(opt)
