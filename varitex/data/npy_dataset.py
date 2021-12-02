@@ -73,20 +73,18 @@ class NPYDataset(CustomDataset):
         return image
 
     @classmethod
-    def _apply_transforms(cls, ndarray_in, height, width, interpolation_nearest=False, affine_transform=None,
+    def _apply_transforms(cls, ndarray, height, width, interpolation_nearest=False, affine_transform=None,
                           center_crop_dim=None):
         # Semantic masks should use 'nearest' interpolation.
         interpolation = cv2.INTER_NEAREST if interpolation_nearest else cv2.INTER_LINEAR
 
-        if affine_transform is not None:
-            ndarray = affine_transform(ndarray_in)
-        else:
-            ndarray = ndarray_in
-
         ndarray = cls._center_crop(ndarray, square_dim=center_crop_dim)
-
         if ndarray.shape[0] != height or ndarray.shape[1] != width:
             ndarray = cv2.resize(ndarray, (width, height), interpolation)
+
+        if affine_transform is not None:
+                ndarray = affine_transform(ndarray)
+
         return ndarray
 
     @classmethod
@@ -201,7 +199,7 @@ class NPYDataset(CustomDataset):
                     img_tensor_clean[~mask_full_tensor_clean.expand_as(img_tensor_clean)] = img_tensor_clean.min()
                 else:
                     img_tensor_clean[~mask_full_tensor_clean.expand_as(img_tensor_clean)] = 0
-            #
+
             return { 
                 DIK.IMAGE_IN_ENCODE: img_tensor_clean,
                 DIK.IMAGE_IN: img_tensor,
