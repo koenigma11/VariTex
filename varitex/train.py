@@ -61,9 +61,8 @@ if __name__ == "__main__":
     mkdir(opt.path_out)
 
     if opt.logger == "wandb":
-        wandb.init(entity=opt.wandb_team, project=opt.wandb_project, name=opt.experiment_name)
         wandb.login()
-        logger = pl.loggers.WandbLogger(save_dir=opt.path_out, name=opt.experiment_name, project=opt.project)
+        logger = pl.loggers.WandbLogger(save_dir=opt.path_out, entity=opt.wandb_team, project=opt.project, name=opt.experiment_name)
         logger.log_hyperparams(opt)
         logger.watch(pipeline)
     elif opt.logger == "tensorboard":
