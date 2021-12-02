@@ -8,7 +8,7 @@ class BaseOptions:
     initialized = False
 
     def initialize(self, parser):
-        parser.add_argument('--dataroot_npy', default=os.path.join(os.getenv("DP"), 'FFHQ/preprocessed_dataset_old'),
+        parser.add_argument('--dataroot_npy', default=os.path.join(os.getenv("DP"), 'FFHQ/preprocessed_dataset_new'),
                             help='Path to the folder with the preprocessed datasets. Should contain .npy files "R", "t", "s", "sp", "ep", "segmentation", "uv", "filename", and a .npz file "dataset_splits".')
         parser.add_argument('--image_folder', default=os.path.join(os.getenv("DP"), 'FFHQ/images'),
                             help='Path to the folder that contains *.png images.')
