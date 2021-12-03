@@ -1,5 +1,6 @@
 import pytorch_lightning as pl
 import torch
+from torch.nn.functional import normalize as normalizeT
 
 from varitex.data.keys_enum import DataItemKey as DIK
 from varitex.data.uv_factory import BFMUVFactory
@@ -51,22 +52,34 @@ class ImageLogCallback(pl.Callback):
         self.log_image(pl_module.logger, "{}/outputs_posed".format(prefix), vis, pl_module.global_step)
 
     def _interpolated(self, pl_module, batch, batch_idx, prefix, n=5):
-        batch2 = pl_module.forward_sample_style(batch.copy(), batch_idx, std_multiplier=4)  # Random new style code
+        """Visualization for Interpolation according to random latent space with std2 """
+        if(self.opt.use_glo):
+            batch2 = batch.copy()
+            batch2[DIK.STYLE_LATENT] += torch.normal(0,4,size=batch[DIK.STYLE_LATENT].size()).to(batch[DIK.STYLE_LATENT].device)
+            batch2[DIK.STYLE_LATENT] = normalizeT(batch2[DIK.STYLE_LATENT]).to(batch[DIK.STYLE_LATENT].device)
+        else:
+            batch2 = pl_module.forward_sample_style(batch.copy(), batch_idx, std_multiplier=4)  # Random new style code
         vis = self.visualizer_interpolation.visualize(pl_module, batch, batch2, n, bidirectional=False,
-                                                      include_gt=False)
+                                                      include_gt=False, normalizeSteps=True)
         self.log_image(pl_module.logger, "{}/interpolation/random_std2".format(prefix), vis, pl_module.global_step)
 
+
+        """Visualization for Interpolation from zero latent space"""
         batch2 = batch.copy()
-        if(not self.opt.use_glo):
-            batch2[DIK.STYLE_LATENT] = torch.zeros_like(batch[DIK.STYLE_LATENT]).to(batch[DIK.STYLE_LATENT].device)
+        batch2[DIK.STYLE_LATENT] = torch.zeros_like(batch[DIK.STYLE_LATENT]).to(batch[DIK.STYLE_LATENT].device)
         vis = self.visualizer_interpolation.visualize(pl_module, batch, batch2, n, bidirectional=False,
                                                       include_gt=False)
         self.log_image(pl_module.logger, "{}/interpolation/zeros".format(prefix), vis, pl_module.global_step)
 
+
+        """Visualization for Interpolation from random latent space"""
         batch2 = batch.copy()
-        batch2[DIK.STYLE_LATENT] = torch.randn_like(batch[DIK.STYLE_LATENT]).to(batch[DIK.STYLE_LATENT].device)
+        if(self.opt.use_glo):
+            batch2[DIK.STYLE_LATENT] = normalizeT(torch.randn_like(batch[DIK.STYLE_LATENT])).to(batch[DIK.STYLE_LATENT].device)
+        else:
+            batch2[DIK.STYLE_LATENT] = torch.randn_like(batch[DIK.STYLE_LATENT]).to(batch[DIK.STYLE_LATENT].device)
         vis = self.visualizer_interpolation.visualize(pl_module, batch, batch2, n, bidirectional=False,
-                                                      include_gt=False)
+                                                      include_gt=False, normalizeSteps=True)
         self.log_image(pl_module.logger, "{}/interpolation/standard_gaussian".format(prefix), vis,
                        pl_module.global_step)
 

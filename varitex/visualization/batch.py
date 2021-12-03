@@ -1,3 +1,8 @@
+import pdb
+
+
+from sklearn.preprocessing import normalize as normalizeNP
+from torch.nn.functional import normalize as normalizeT
 import numpy as np
 import torch
 import torchvision.transforms
@@ -61,6 +66,8 @@ class Visualizer:
             q = torch.distributions.Normal(batch[DIK.STYLE_LATENT_MU], batch[DIK.STYLE_LATENT_STD] * std_multiplier)
             z = q.rsample()
             batch[DIK.STYLE_LATENT] = z
+        else:
+            batch[DIK.STYLE_LATENT] = normalizeT(torch.randn_like(batch[DIK.STYLE_LATENT])).to(batch[DIK.STYLE_LATENT].device)
         return batch
 
     def detach(self, o, to_cpu=False):
@@ -352,10 +359,13 @@ class UVVisualizer(Visualizer):
 
 class InterpolationVisualizer(Visualizer):
 
-    def run(self, pipeline, batch, latent_from, latent_to, n):
+    def run(self, pipeline, batch, latent_from, latent_to, n, normalizeSteps=False):
         result = list()
         # linear interpolation
         all_latents = interpolation(n, latent_from=latent_from, latent_to=latent_to)
+        if(normalizeSteps):
+            for i in range(len(all_latents)):
+                all_latents[i] = normalizeNP(all_latents[i])
         all_latents = to_tensor(all_latents, batch[DIK.STYLE_LATENT].device)
         for latent in all_latents:
             batch2 = batch.copy()
@@ -369,10 +379,10 @@ class InterpolationVisualizer(Visualizer):
             result.append(img_out)
         return result
 
-    def visualize(self, pipeline, batch_from, batch_to, n, bidirectional=True, include_gt=True):
+    def visualize(self, pipeline, batch_from, batch_to, n, bidirectional=True, include_gt=True, normalizeSteps=False):
         latent_from = to_np(batch_from[DIK.STYLE_LATENT])
         latent_to = to_np(batch_to[DIK.STYLE_LATENT])
-        result = self.run(pipeline, batch_from, latent_from, latent_to, n)
+        result = self.run(pipeline, batch_from, latent_from, latent_to, n, normalizeSteps)
 
         if include_gt:
             n = n + 2
