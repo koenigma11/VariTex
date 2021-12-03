@@ -1,3 +1,5 @@
+import pdb
+
 import pytorch_lightning as pl
 import torch
 from torch.nn.functional import normalize as normalizeT
@@ -68,8 +70,15 @@ class ImageLogCallback(pl.Callback):
 
         """Visualization for Interpolation from zero latent space"""
         batch2 = batch.copy()
-        batch2[DIK.STYLE_LATENT] = torch.zeros_like(batch[DIK.STYLE_LATENT]).to(batch[DIK.STYLE_LATENT].device)
-        vis = self.visualizer_interpolation.visualize(pl_module, batch, batch2, n, bidirectional=False,
+        if(self.opt.use_glo):
+            batch0 = batch.copy()
+            batch0[DIK.STYLE_LATENT] = (batch[DIK.STYLE_LATENT]*2).to(batch[DIK.STYLE_LATENT].device)
+            batch2[DIK.STYLE_LATENT] = torch.zeros_like(batch[DIK.STYLE_LATENT]).to(batch[DIK.STYLE_LATENT].device)
+            vis = self.visualizer_interpolation.visualize(pl_module, batch0, batch2, 2*n, bidirectional=False,
+                                                      include_gt=False)
+        else:
+            batch2[DIK.STYLE_LATENT] = torch.zeros_like(batch[DIK.STYLE_LATENT]).to(batch[DIK.STYLE_LATENT].device)
+            vis = self.visualizer_interpolation.visualize(pl_module, batch, batch2, n, bidirectional=False,
                                                       include_gt=False)
         self.log_image(pl_module.logger, "{}/interpolation/zeros".format(prefix), vis, pl_module.global_step)
 
