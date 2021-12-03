@@ -52,6 +52,7 @@ class BaseOptions:
 
         parser.add_argument('--experiment_name', default='default', help='Experiment name for logger')
         parser.add_argument('--project', default="varitex", help="Project name for wandb logger")
+        parser.add_argument('--wandb_team', default="ait_varitex_glo")
         parser.add_argument('--debug', action="store_true",
                             help="Enable debug mode, i.e., running a fast_dev_run in the Trainer.")
 
