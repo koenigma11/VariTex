@@ -362,7 +362,6 @@ class InterpolationVisualizer(Visualizer):
     def run(self, pipeline, batch, latent_from, latent_to, n, normalizeSteps=False):
         result = list()
         # linear interpolation
-        pdb.set_trace()
         all_latents = interpolation(n, latent_from=latent_from, latent_to=latent_to)
         all_latents = to_tensor(all_latents, batch[DIK.STYLE_LATENT].device)
         for latent in all_latents:
