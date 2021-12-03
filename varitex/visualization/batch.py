@@ -362,13 +362,13 @@ class InterpolationVisualizer(Visualizer):
     def run(self, pipeline, batch, latent_from, latent_to, n, normalizeSteps=False):
         result = list()
         # linear interpolation
+        pdb.set_trace()
         all_latents = interpolation(n, latent_from=latent_from, latent_to=latent_to)
-        if(normalizeSteps):
-            for i in range(len(all_latents)):
-                all_latents[i] = normalizeNP(all_latents[i])
         all_latents = to_tensor(all_latents, batch[DIK.STYLE_LATENT].device)
         for latent in all_latents:
             batch2 = batch.copy()
+            if(normalizeSteps):
+                latent = normalizeT(latent)
             batch2[DIK.STYLE_LATENT] = latent.reshape(batch[DIK.STYLE_LATENT].shape)
             batch2 = pipeline.forward_latent2image(batch2, 0)
             img_out = batch2[DIK.IMAGE_OUT][0]

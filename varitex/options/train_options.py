@@ -25,7 +25,7 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--lr_discriminator', type=float, default=1e-3)
 
         parser.add_argument('--num_workers', type=int, default=1, help='Number of workers in dataloader')
-        parser.add_argument('--display_freq', type=int, default=10000, help='Display images every X iterations')
+        parser.add_argument('--display_freq', type=int, default=1000, help='Display images every X iterations')
         parser.add_argument('--max_epochs', type=int, default=44, help='Should converge in 44 epochs.')
 
 

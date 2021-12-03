@@ -53,14 +53,16 @@ class ImageLogCallback(pl.Callback):
 
     def _interpolated(self, pl_module, batch, batch_idx, prefix, n=5):
         """Visualization for Interpolation according to random latent space with std2 """
+        normalizeSteps=False;
         if(self.opt.use_glo):
+            normalizeSteps=True
             batch2 = batch.copy()
-            batch2[DIK.STYLE_LATENT] += torch.normal(0,4,size=batch[DIK.STYLE_LATENT].size()).to(batch[DIK.STYLE_LATENT].device)
-            batch2[DIK.STYLE_LATENT] = normalizeT(batch2[DIK.STYLE_LATENT]).to(batch[DIK.STYLE_LATENT].device)
+            z = torch.normal(0,4,size=batch[DIK.STYLE_LATENT].size()).to(batch[DIK.STYLE_LATENT].device)
+            batch2[DIK.STYLE_LATENT] = normalizeT(batch2[DIK.STYLE_LATENT]+z).to(batch[DIK.STYLE_LATENT].device)
         else:
             batch2 = pl_module.forward_sample_style(batch.copy(), batch_idx, std_multiplier=4)  # Random new style code
         vis = self.visualizer_interpolation.visualize(pl_module, batch, batch2, n, bidirectional=False,
-                                                      include_gt=False, normalizeSteps=True)
+                                                      include_gt=False, normalizeSteps=normalizeSteps)
         self.log_image(pl_module.logger, "{}/interpolation/random_std2".format(prefix), vis, pl_module.global_step)
 
 
@@ -79,7 +81,7 @@ class ImageLogCallback(pl.Callback):
         else:
             batch2[DIK.STYLE_LATENT] = torch.randn_like(batch[DIK.STYLE_LATENT]).to(batch[DIK.STYLE_LATENT].device)
         vis = self.visualizer_interpolation.visualize(pl_module, batch, batch2, n, bidirectional=False,
-                                                      include_gt=False, normalizeSteps=True)
+                                                      include_gt=False, normalizeSteps=normalizeSteps)
         self.log_image(pl_module.logger, "{}/interpolation/standard_gaussian".format(prefix), vis,
                        pl_module.global_step)
 
