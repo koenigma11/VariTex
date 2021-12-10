@@ -1,3 +1,5 @@
+import pdb
+
 import numpy as np
 from mutil.data_types import to_np
 
@@ -65,4 +67,5 @@ def interpolation(n, latent_from, latent_to, gaussian_correction=True):
     if gaussian_correction:
         steps = steps / np.sqrt(steps ** 2 + (1 - steps) ** 2)  # Variance correction
     all_latents = (1 - steps) * latent_from + steps * latent_to
+    pdb.set_trace()
     return all_latents

@@ -1,6 +1,7 @@
 import pdb
 
 import torch
+import wandb
 from torch.nn import BCELoss, Parameter, Embedding
 import numpy as np
 
@@ -32,11 +33,14 @@ class PipelineModule(CustomModule):
         self.metric_psnr = PSNR()
         self.metric_ssim = SSIM()
         self.metric_lpips = LPIPS()
+        self.data = []
+        self.data2 = []
         if(self.opt.use_glo):
             #Quickly about embedding:
             #Takes in input shape (nSamples, latentDim)
             embedding_shape = np.array([getattr(self.opt, "nTrainSamples", 70000), getattr(self.opt, "latent_dim")])
-            self.Z = Embedding(embedding_shape[0],embedding_shape[1], max_norm=1.)
+            #self.Z = Embedding(embedding_shape[0],embedding_shape[1], max_norm=1.)
+            self.Z = Embedding(embedding_shape[0],embedding_shape[1])
             if(self.opt.glo_init=='pca'):
                 z = np.load(getattr(self.opt, "pca_file")).astype(np.single)
             else:
@@ -56,8 +60,12 @@ class PipelineModule(CustomModule):
         ##why even use cpu here? should I use to_device here? well no it should be a tensor right? embedding yes, zi's yes
         if not isinstance(batch, np.ndarray):
             batch = batch.data.cpu().numpy()
-        return batch / np.maximum(np.sqrt(np.sum(batch**2, axis=1))[:, np.newaxis], 1)
-        
+        return self.to_device(batch / np.maximum(np.sqrt(np.sum(batch**2, axis=1))[:, np.newaxis], 1))
+
+    def normalize_l2_ball(self, input, dim: int = 1, eps: float = 1e-12):
+        denom = torch.max(torch.linalg.norm(input, 2.0, dim=1, keepdim=True).clamp_min_(eps).expand_as(input),
+                          self.to_device(torch.ones(input.shape)))
+        return torch.div(input, denom)
     
     def to_device(self, o, device='cuda'):
         if isinstance(o, list):
@@ -72,11 +80,26 @@ class PipelineModule(CustomModule):
         #pdb.set_trace()
         if(self.opt.use_glo):
             batch_idxs = torch.arange(batch_idx*self.opt.batch_size,(batch_idx+1)*self.opt.batch_size, dtype=torch.long)
-            batch[DIK.STYLE_LATENT] = self.Z(batch_idxs.cuda())
+            tmp = self.Z(batch_idxs.cuda())
+            norms = torch.linalg.norm(tmp, dim=1)
+            norm = torch.mean(norms)
+            self.data2.append(norms[0].item())
+            self.data.append(norm.item())
+
+            batch[DIK.STYLE_LATENT] = self.normalize_l2_ball(tmp)
         else:
             batch = batch
         batch = self.to_device(batch, self.opt.device)
         batch = self.generator(batch, batch_idx, std_multiplier)
+        if(self.global_step%1000==0 and self.global_step>=1000):
+            scores = [[s]for s in self.data]
+            table = wandb.Table(data=scores, columns=["norms"])
+            wandb.log({'my_histogram': wandb.plot.histogram(table, "norms",
+            title ="Means over norms")})
+            scores = [[s] for s in self.data2]
+            table = wandb.Table(data=scores, columns=["norms2"])
+            wandb.log({'my_histogram2': wandb.plot.histogram(table, "norms2",
+                                                            title="Means over norms2")})
         return batch
 
     def training_step(self, batch, batch_idx, optimizer_idx=0):
