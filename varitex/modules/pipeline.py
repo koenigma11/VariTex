@@ -77,7 +77,7 @@ class PipelineModule(CustomModule):
         if(self.opt.use_glo):
             if(batch_idx==0):
                 folder = 'norm_snapshots'
-                path_folder = os.path.join(self.opt.path_out, folder)
+                path_folder = os.path.join(os.getenv("OP"), folder)
                 file_name = os.path.join(path_folder, 'norms_epoch_'+str(self.current_epoch))
                 norms = torch.linalg.norm(self.Z.weight,dim=1)
                 np.save(file_name,norms.detach().cpu().numpy())
