@@ -7,7 +7,7 @@ try:
     from varitex.data.uv_factory import BFMUVFactory
     from varitex.modules.pipeline import PipelineModule
     from varitex.visualization.batch import CompleteVisualizer
-    from varitex.options import varitex_default_options
+    from varitex.options import varitex_default_options, varitex_glo_options
 except ModuleNotFoundError:
     print("Have you added VariTex to your pythonpath?")
     print('To fix this error, go to the root path of the repository ".../VariTex/" \n '
@@ -18,7 +18,8 @@ except ModuleNotFoundError:
 
 class Demo:
     def __init__(self, opt):
-        default_opt = varitex_default_options()
+        #default_opt = varitex_default_options()
+        default_opt = varitex_glo_options()
         default_opt.update(opt)
         self.opt = ObjectDict(default_opt)
 
@@ -28,6 +29,19 @@ class Demo:
         self.pipeline = PipelineModule.load_from_checkpoint(self.opt.checkpoint, opt=self.opt, strict=False).to(
             self.opt.device).eval()
         self.device = self.pipeline.device
+    def runGlo(self, z, sp, ep, theta,t=torch.Tensor([0, -2, -57])):
+        batch={
+            DIK.STYLE_LATENT: z,
+            DIK.COEFF_SHAPE: sp,
+            DIK.COEFF_EXPRESSION: ep,
+            DIK.T: t
+        }
+        batch = {k: v.to(self.device) for k, v in batch.items()}
+
+        batch = self.visualizer_complete.visualize_single(self.pipeline, batch, 0, theta_all=theta,
+                                                          forward_type='style2image')
+        batch = {k: v.detach().cpu() for k, v in batch.items()}
+        return batch
 
     def run(self, z, sp, ep, theta, t=torch.Tensor([0, -2, -57])):
         batch = {
