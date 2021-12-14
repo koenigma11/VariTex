@@ -26,7 +26,6 @@ class ImageLogCallback(pl.Callback):
         self.visualizer_uv = UVVisualizer(opt, bfm_uv_factory=uv_factory_bfm, mask_value=self.MASK_VALUE)
         self.visualizer_interpolation = InterpolationVisualizer(opt, mask_value=self.MASK_VALUE)
         self.visualizer_neural_texture = NeuralTextureVisualizer(opt)
-        self.histData=[]
 
     def log_image(self, logger, key, vis, step):
         if self.opt.logger == "tensorboard":
@@ -118,9 +117,6 @@ class ImageLogCallback(pl.Callback):
                        pl_module.global_step)
 
     def log_batch(self, pl_module, batch, batch_idx, prefix):
-        #columns = ["norm"]
-        #histData = self.histData
-        #pl_module.logger.log_table(key="norms", columns=columns, data=histData)
         self._combined(pl_module, batch, prefix)
         self._sampled(pl_module, batch, batch_idx, prefix)
         self._interpolated(pl_module, batch, batch_idx, prefix)

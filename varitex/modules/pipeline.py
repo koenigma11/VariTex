@@ -4,6 +4,7 @@ import torch
 import wandb
 from torch.nn import BCELoss, Parameter, Embedding
 import numpy as np
+import os
 
 from varitex.data.keys_enum import DataItemKey as DIK
 from varitex.modules.discriminator import MultiscaleDiscriminator
@@ -33,8 +34,6 @@ class PipelineModule(CustomModule):
         self.metric_psnr = PSNR()
         self.metric_ssim = SSIM()
         self.metric_lpips = LPIPS()
-        self.data = []
-        self.data2 = []
         if(self.opt.use_glo):
             #Quickly about embedding:
             #Takes in input shape (nSamples, latentDim)
@@ -46,13 +45,11 @@ class PipelineModule(CustomModule):
             else:
                 #rnd initialization
                 z = np.rand.randn(embedding_shape[0],embedding_shape[1])
-            self.Z.weight = Parameter(torch.from_numpy(self.project_l2_ball(z)))
+            pcaFirst = self.project_l2_ball(z)
+            pcaHalf = pcaFirst[:,:128]
+            pcaFull = np.concatenate([pcaHalf, pcaHalf],axis=1)
+            self.Z.weight = Parameter(torch.from_numpy(pcaFull))
             del z
-            ##self.zi = (torch.zeros(self.opt.batch_size,embedding_shape[1]))
-            #self.zi = self.zi.cuda()  ##Do we need this?
-            #Is this correct here? Should we use just torch(...,req_grad=true)? or Variable? --> Deprecated
-            ##self.zi = Parameter(self.zi, requires_grad=True)
-
         
 
     def project_l2_ball(self, batch):
@@ -77,29 +74,21 @@ class PipelineModule(CustomModule):
         return o
 
     def forward(self, batch, batch_idx, std_multiplier=1):
-        #pdb.set_trace()
         if(self.opt.use_glo):
+            if(batch_idx==0):
+                folder = 'norm_snapshots'
+                path_folder = os.path.join(self.opt.path_out, folder)
+                file_name = os.path.join(path_folder, 'norms_epoch_'+str(self.current_epoch))
+                norms = torch.linalg.norm(self.Z.weight,dim=1)
+                np.save(file_name,norms.detach().cpu().numpy())
             batch_idxs = torch.arange(batch_idx*self.opt.batch_size,(batch_idx+1)*self.opt.batch_size, dtype=torch.long)
             tmp = self.Z(batch_idxs.cuda())
-            norms = torch.linalg.norm(tmp, dim=1)
-            norm = torch.mean(norms)
-            self.data2.append(norms[0].item())
-            self.data.append(norm.item())
-
-            batch[DIK.STYLE_LATENT] = self.normalize_l2_ball(tmp)
+            #batch[DIK.STYLE_LATENT] = self.normalize_l2_ball(tmp)
+            batch[DIK.STYLE_LATENT] = tmp
         else:
             batch = batch
         batch = self.to_device(batch, self.opt.device)
         batch = self.generator(batch, batch_idx, std_multiplier)
-        if(self.global_step%1000==0 and self.global_step>=1000):
-            scores = [[s]for s in self.data]
-            table = wandb.Table(data=scores, columns=["norms"])
-            wandb.log({'my_histogram': wandb.plot.histogram(table, "norms",
-            title ="Means over norms")})
-            scores = [[s] for s in self.data2]
-            table = wandb.Table(data=scores, columns=["norms2"])
-            wandb.log({'my_histogram2': wandb.plot.histogram(table, "norms2",
-                                                            title="Means over norms2")})
         return batch
 
     def training_step(self, batch, batch_idx, optimizer_idx=0):
