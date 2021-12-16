@@ -55,6 +55,8 @@ class BaseOptions:
         parser.add_argument('--wandb_team', default="ait_varitex_glo")
         parser.add_argument('--debug', action="store_true",
                             help="Enable debug mode, i.e., running a fast_dev_run in the Trainer.")
+        parser.add_argument('--save_every_n_epochs', type=int, default=4,
+                            help="Saves checkpoints every n epochs")
 
         # Some GLO options (look through with marcel if cleaner otpions are available)
         parser.add_argument('--nTrainSamples', type=int, default=70000, help='Number of training samples.')

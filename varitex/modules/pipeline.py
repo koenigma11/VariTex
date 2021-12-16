@@ -80,7 +80,7 @@ class PipelineModule(CustomModule):
                 path_folder = os.path.join(os.getenv("OP"), folder)
                 file_name = os.path.join(path_folder, 'norms_epoch_'+str(self.current_epoch))
                 norms = torch.linalg.norm(self.Z.weight,dim=1)
-                np.save(file_name,self.Z.weight.detach().cpu().numpy())
+                np.save(norms.detach().cpu().numpy())
             batch_idxs = torch.arange(batch_idx*self.opt.batch_size,(batch_idx+1)*self.opt.batch_size, dtype=torch.long)
             tmp = self.Z(batch_idxs.cuda())
             #batch[DIK.STYLE_LATENT] = self.normalize_l2_ball(tmp)

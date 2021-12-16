@@ -70,41 +70,6 @@ best_eval_logprob = float('-inf')
 # Data
 # --------------------
 
-def fetch_dataloader(args, train=True, data_dependent_init=False):
-    args.input_dims = {'mnist': (3,32,32), 'celeba': (3,64,64)}[args.dataset]
-
-    transforms = {'mnist': T.Compose([T.Pad(2),                                         # image to 32x32 same as CIFAR
-                                      T.RandomAffine(degrees=0, translate=(0.1, 0.1)),  # random shifts to fill the padded pixels
-                                      T.ToTensor(),
-                                      T.Lambda(lambda t: t + torch.rand_like(t)/2**8),  # dequantize
-                                      T.Lambda(lambda t: t.expand(3,-1,-1))]),          # expand to 3 channels
-
-                  'celeba': T.Compose([T.CenterCrop(148),  # RealNVP preprocessing
-                                       T.Resize(64),
-                                       T.Lambda(lambda im: np.array(im, dtype=np.float32)),                     # to numpy
-                                       T.Lambda(lambda x: np.floor(x / 2**(8 - args.n_bits)) / 2**args.n_bits), # lower bits
-                                       T.ToTensor(),  # note: if input to this transform is uint8, it divides by 255 and returns float
-                                       T.Lambda(lambda t: t + torch.rand_like(t) / 2**args.n_bits)])            # dequantize
-                  }[args.dataset]
-
-    dataset = {'mnist': MNIST, 'celeba': CelebA}[args.dataset]
-
-    # load the specific dataset
-    dataset = dataset(root=args.data_dir, train=train, transform=transforms)
-
-    if args.mini_data_size:
-        dataset.data = dataset.data[:args.mini_data_size]
-
-    # load sampler and dataloader
-    if args.distributed and train is True and not data_dependent_init:  # distributed training; but exclude initialization
-        sampler = torch.utils.data.distributed.DistributedSampler(dataset)
-    else:
-        sampler = None
-
-    batch_size = args.batch_size_init if data_dependent_init else args.batch_size  # if data dependent init use init batch size
-    kwargs = {'num_workers': 1, 'pin_memory': True} if args.device.type is 'cuda' else {}
-    return DataLoader(dataset, batch_size=batch_size, shuffle=(sampler is None), drop_last=True, sampler=sampler, **kwargs)
-
 
 # --------------------
 # Model component layers

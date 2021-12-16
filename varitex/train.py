@@ -70,10 +70,11 @@ if __name__ == "__main__":
         logger = TensorBoardLogger(
             save_dir=opt.path_out, name=opt.experiment_name
         )
-
+    modelCheckpoint = ModelCheckpoint(opt.path_out, every_n_epochs=opt.save_every_n_epochs, save_top_k=-1,
+                   auto_insert_metric_name=True)
     trainer = pl.Trainer(logger, gpus=gpus, max_epochs=opt.max_epochs, default_root_dir=opt.path_out,
                          terminate_on_nan=False,  # Terminate on nan is expensive
-                         limit_val_batches=0.25, callbacks=[ImageLogCallback(opt), ModelCheckpoint()],
+                         limit_val_batches=0.25, callbacks=[ImageLogCallback(opt), modelCheckpoint],
                          fast_dev_run=opt.debug,
                          resume_from_checkpoint=opt.checkpoint, weights_summary='top')
 
