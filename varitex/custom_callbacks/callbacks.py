@@ -59,6 +59,7 @@ class ImageLogCallback(pl.Callback):
         self.log_image(pl_module.logger, "{}/outputs_posed".format(prefix), vis, pl_module.global_step)
 
     def _interpolated(self, pl_module, batch, batch_idx, prefix, n=5):
+
         """Visualization for Interpolation according to random latent space with std2 """
         normalizeSteps=False;
         if(self.opt.use_glo):

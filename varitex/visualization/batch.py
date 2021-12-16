@@ -366,8 +366,8 @@ class InterpolationVisualizer(Visualizer):
         all_latents = to_tensor(all_latents, batch[DIK.STYLE_LATENT].device)
         for latent in all_latents:
             batch2 = batch.copy()
-            if(normalizeSteps):
-                latent = normalizeT(latent)
+            # if(normalizeSteps):
+            #     latent = normalizeT(latent)
             batch2[DIK.STYLE_LATENT] = latent.reshape(batch[DIK.STYLE_LATENT].shape)
             batch2 = pipeline.forward_latent2image(batch2, 0)
             img_out = batch2[DIK.IMAGE_OUT][0]
