@@ -9,6 +9,8 @@ from mutil.pytorch_utils import ImageNetNormalizeTransformInverse
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger, TensorBoardLogger
 from torch.utils.data import DataLoader
+import sys
+
 
 try:
     from varitex.custom_callbacks.callbacks import ImageLogCallback
@@ -17,6 +19,7 @@ try:
     from varitex.options.train_options import TrainOptions
     from mutil.files import copy_src, mkdir
 except ModuleNotFoundError:
+    print(sys.path)
     print("Have you added VariTex to your pythonpath?")
     print('To fix this error, go to the root path of the repository ".../VariTex/" \n '
           'and run \n'

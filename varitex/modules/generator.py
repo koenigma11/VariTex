@@ -9,6 +9,7 @@ from varitex.modules.feature2image import Feature2ImageRenderer
 from varitex.modules.custom_module import CustomModule
 
 
+
 class Generator(CustomModule):
     def __init__(self, opt):
         super().__init__(opt)
@@ -23,6 +24,7 @@ class Generator(CustomModule):
         self.encoder = Encoder(opt)
         self.decoder = Decoder(opt)
 
+
         self.decoder_exterior = AdditiveDecoder(opt)
         self.texture2image = Feature2ImageRenderer(opt)
 
@@ -33,7 +35,10 @@ class Generator(CustomModule):
             batch = self.forward_encode(batch, batch_idx)  # Only encoding, not yet a distribution
             batch = self.forward_encoded2latent_distribution(batch)  # Compute mu and std
             batch = self.forward_sample_style(batch, batch_idx, std_multiplier=std_multiplier)  # Sample a latent code
+        # if (self.opt.use_NF):
+        #     batch = self.flow.sample(self.opt.batch_size)
         batch = self.forward_latent2image(batch, batch_idx)  # Decoders for face and exterior, followed by rendering
+
         return batch
 
     def forward_encode(self, batch, batch_idx):
@@ -63,6 +68,8 @@ class Generator(CustomModule):
         return batch
 
     def forward_latent2image(self, batch, batch_idx):
+        # if (self.opt.use_NF):
+        #     batch = self.flow
         # Given a latent code, render an image.
         batch = self.forward_latent2featureimage(batch, batch_idx)
         # Neural rendering

@@ -11,7 +11,14 @@ from varitex.modules.discriminator import MultiscaleDiscriminator
 from varitex.modules.generator import Generator
 from varitex.modules.custom_module import CustomModule
 from varitex.modules.loss import ImageNetVGG19Loss, kl_divergence, l2_loss, GANLoss
-from varitex.modules.metrics import PSNR, SSIM, LPIPS
+from varitex.modules.metrics import PSNR, SSIM, LPIPS, FID
+
+
+from nflows.flows.base import Flow
+from nflows.distributions.normal import StandardNormal
+from nflows.transforms.base import CompositeTransform
+from nflows.transforms.autoregressive import MaskedAffineAutoregressiveTransform
+from nflows.transforms.permutations import ReversePermutation
 
 
 class PipelineModule(CustomModule):
@@ -34,6 +41,8 @@ class PipelineModule(CustomModule):
         self.metric_psnr = PSNR()
         self.metric_ssim = SSIM()
         self.metric_lpips = LPIPS()
+        self.metric_fid = FID()
+
         if(self.opt.use_glo):
             #Quickly about embedding:
             #Takes in input shape (nSamples, latentDim)
@@ -45,11 +54,22 @@ class PipelineModule(CustomModule):
             else:
                 #rnd initialization
                 z = np.rand.randn(embedding_shape[0],embedding_shape[1])
-            pcaFirst = self.project_l2_ball(z)
+            pcaFirst = z#self.project_l2_ball(z)
             pcaHalf = pcaFirst[:,:128]
             pcaFull = np.concatenate([pcaHalf, pcaHalf],axis=1)
+            pcaFull = self.project_l2_ball(pcaFull)
             self.Z.weight = Parameter(torch.from_numpy(pcaFull))
             del z
+        if(self.opt.use_NF):
+            base_dist = StandardNormal(shape=[256])
+            transforms = []
+            for _ in range(4):
+                transforms.append(ReversePermutation(features=256))
+                transforms.append(MaskedAffineAutoregressiveTransform(features=256,
+                                                                      hidden_features=256))
+            transform = CompositeTransform(transforms)
+            self.flow = Flow(transform, base_dist)
+
         
 
     def project_l2_ball(self, batch):
@@ -76,6 +96,7 @@ class PipelineModule(CustomModule):
     def forward(self, batch, batch_idx, std_multiplier=1):
         if(self.opt.use_glo):
             if(batch_idx==0):
+                ## Take some norm snapshots for later visualization
                 folder = 'norm_snapshots'
                 path_folder = os.path.join(os.getenv("OP"), folder)
                 file_name = os.path.join(path_folder, 'norms_epoch_'+str(self.current_epoch))
@@ -110,11 +131,13 @@ class PipelineModule(CustomModule):
         psnr = self.metric_psnr(fake, real)
         ssim = self.metric_ssim(fake, real)
         lpips = self.metric_lpips(fake, real)
+        fid = self.metric_fid(fake, real)
 
         self.log_dict({
             "val/psnr": psnr,
             "val/ssim": ssim,
-            "val/lpips": lpips
+            "val/lpips": lpips,
+            "val/fid": fid
         })
 
     # Below methods simply forward the calls to the generator
@@ -164,6 +187,7 @@ class PipelineModule(CustomModule):
         loss_vgg = 0
         loss_segmentation = 0
         loss_rgb_texture = 0
+        loss_flow = 0
 
         image_out = batch[DIK.IMAGE_OUT]
         image_in = batch[DIK.IMAGE_IN]
@@ -171,6 +195,8 @@ class PipelineModule(CustomModule):
             loss_kl=0
         else:
             loss_kl = kl_divergence(batch[DIK.STYLE_LATENT_MU], batch[DIK.STYLE_LATENT_STD]).mean()
+        if self.opt.lambda_flow > 0:
+            loss_flow = -self.flow.log_prob(inputs=batch[DIK.STYLE_LATENT]).mean()
 
         if getattr(self.opt, "lambda_gan", 0) > 0:
             pred_fake, pred_real = self._forward_discriminate(image_out, image_in)
@@ -215,7 +241,8 @@ class PipelineModule(CustomModule):
                self.opt.lambda_kl * loss_kl + \
                self.opt.lambda_vgg * loss_vgg + \
                self.opt.lambda_segmentation * loss_segmentation + \
-               self.opt.lambda_rgb_texture * loss_rgb_texture
+               self.opt.lambda_rgb_texture * loss_rgb_texture + \
+               self.opt.lambda_flow * loss_flow
 
         data_log = {
             "train/generator": loss_gan,
@@ -225,7 +252,8 @@ class PipelineModule(CustomModule):
             "train/vgg_l1": loss_vgg,
             "train/segmentation": loss_segmentation,
             "train/rgb_texture": loss_rgb_texture,
-            "train/loss": loss_unweighted
+            "train/loss": loss_unweighted,
+            "train/flow": loss_flow
         }
         # Filter out zero losses
         data_log = {k: v.clone().detach() for k, v in data_log.items() if v != 0}

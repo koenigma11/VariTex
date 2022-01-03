@@ -155,8 +155,12 @@ class SampledVisualizer(Visualizer):
         images_out = list()
         for s_i in range(self.n_samples):
             batch2 = batch.copy()
-            batch2[DIK.STYLE_LATENT] = torch.randn_like(batch2[DIK.STYLE_LATENT]).to(
-                batch2[DIK.STYLE_LATENT].device) * std_multiplier
+            if(self.opt.use_NF):
+                batch2[DIK.STYLE_LATENT] = pipeline.flow.sample(self.opt.batch_size).to(
+                    batch2[DIK.STYLE_LATENT].device).detach()
+            else:
+                batch2[DIK.STYLE_LATENT] = torch.randn_like(batch2[DIK.STYLE_LATENT]).to(
+                    batch2[DIK.STYLE_LATENT].device) * std_multiplier
             batch2 = pipeline.forward_latent2image(batch2, batch_idx)
             img_out = batch2[DIK.IMAGE_OUT]
             img_out = img_out[0]

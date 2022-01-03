@@ -12,6 +12,7 @@ from torchvision.utils import save_image, make_grid
 from torch.utils.data import DataLoader
 from torch.utils.checkpoint import checkpoint
 
+
 import numpy as np
 from tensorboardX import SummaryWriter
 
@@ -21,46 +22,47 @@ import math
 import argparse
 import pprint
 
-# # action
-# parser.add_argument('--train', action='store_true', help='Train a flow.')
-# parser.add_argument('--evaluate', action='store_true', help='Evaluate a flow.')
-# parser.add_argument('--generate', action='store_true', help='Generate samples from a model.')
-# parser.add_argument('--visualize', action='store_true', help='Visualize manipulated attribures.')
-# parser.add_argument('--restore_file', type=str, help='Path to model to restore.')
-# parser.add_argument('--seed', type=int, help='Random seed to use.')
-# # paths and reporting
-# parser.add_argument('--data_dir', default='/mnt/disks/data/', help='Location of datasets.')
-# parser.add_argument('--output_dir', default='./results/{}'.format(os.path.splitext(__file__)[0]))
-# parser.add_argument('--results_file', default='results.txt', help='Filename where to store settings and test results.')
-# parser.add_argument('--log_interval', type=int, default=2, help='How often to show loss statistics and save samples.')
-# parser.add_argument('--save_interval', type=int, default=50, help='How often to save during training.')
-# parser.add_argument('--eval_interval', type=int, default=1, help='Number of epochs to eval model and save model checkpoint.')
-# # data
-# parser.add_argument('--dataset', type=str, help='Which dataset to use.')
-# # model parameters
-# parser.add_argument('--depth', type=int, default=32, help='Depth of the network (cf Glow figure 2).')
-# parser.add_argument('--n_levels', type=int, default=3, help='Number of levels of of the network (cf Glow figure 2).')
-# parser.add_argument('--width', type=int, default=512, help='Dimension of the hidden layers.')
-# parser.add_argument('--z_std', type=float, help='Pass specific standard devition during generation/sampling.')
-# # training params
-# parser.add_argument('--batch_size', type=int, default=16, help='Training batch size.')
-# parser.add_argument('--batch_size_init', type=int, default=256, help='Batch size for the data dependent initialization.')
-# parser.add_argument('--n_epochs', type=int, default=10, help='Number of epochs to train.')
-# parser.add_argument('--n_epochs_warmup', type=int, default=2, help='Number of warmup epochs for linear learning rate annealing.')
-# parser.add_argument('--start_epoch', default=0, help='Starting epoch (for logging; to be overwritten when restoring file.')
-# parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate.')
-# parser.add_argument('--mini_data_size', type=int, default=None, help='Train only on this number of datapoints.')
-# parser.add_argument('--grad_norm_clip', default=50, type=float, help='Clip gradients during training.')
-# parser.add_argument('--checkpoint_grads', action='store_true', default=False, help='Whether to use gradient checkpointing in forward pass.')
-# parser.add_argument('--n_bits', default=5, type=int, help='Number of bits for input images.')
-# # distributed training params
-# parser.add_argument('--distributed', action='store_true', default=False, help='Whether to use DistributedDataParallels on multiple machines and GPUs.')
-# parser.add_argument('--world_size', type=int, default=1, help='Number of nodes for distributed training.')
-# parser.add_argument('--local_rank', type=int, help='When provided, run model on this cuda device. When None, used by torch.distributed.launch utility to manage multi-GPU training.')
-# # visualize
-# parser.add_argument('--vis_img', type=str, help='Path to image file to manipulate attributes and visualize.')
-# parser.add_argument('--vis_attrs', nargs='+', type=int, help='Which attribute to manipulate.')
-# parser.add_argument('--vis_alphas', nargs='+', type=float, help='Step size on the manipulation direction.')
+# action
+parser = argparse.ArgumentParser()
+parser.add_argument('--train', action='store_true', help='Train a flow.')
+parser.add_argument('--evaluate', action='store_true', help='Evaluate a flow.')
+parser.add_argument('--generate', action='store_true', help='Generate samples from a model.')
+parser.add_argument('--visualize', action='store_true', help='Visualize manipulated attribures.')
+parser.add_argument('--restore_file', type=str, help='Path to model to restore.')
+parser.add_argument('--seed', type=int, help='Random seed to use.')
+# paths and reporting
+parser.add_argument('--data_dir', default='/mnt/disks/data/', help='Location of datasets.')
+parser.add_argument('--output_dir', default='./results/{}'.format(os.path.splitext(__file__)[0]))
+parser.add_argument('--results_file', default='results.txt', help='Filename where to store settings and test results.')
+parser.add_argument('--log_interval', type=int, default=2, help='How often to show loss statistics and save samples.')
+parser.add_argument('--save_interval', type=int, default=50, help='How often to save during training.')
+parser.add_argument('--eval_interval', type=int, default=1, help='Number of epochs to eval model and save model checkpoint.')
+# data
+parser.add_argument('--dataset', type=str, help='Which dataset to use.')
+# model parameters
+parser.add_argument('--depth', type=int, default=32, help='Depth of the network (cf Glow figure 2).')
+parser.add_argument('--n_levels', type=int, default=3, help='Number of levels of of the network (cf Glow figure 2).')
+parser.add_argument('--width', type=int, default=512, help='Dimension of the hidden layers.')
+parser.add_argument('--z_std', type=float, help='Pass specific standard devition during generation/sampling.')
+# training params
+parser.add_argument('--batch_size', type=int, default=16, help='Training batch size.')
+parser.add_argument('--batch_size_init', type=int, default=256, help='Batch size for the data dependent initialization.')
+parser.add_argument('--n_epochs', type=int, default=10, help='Number of epochs to train.')
+parser.add_argument('--n_epochs_warmup', type=int, default=2, help='Number of warmup epochs for linear learning rate annealing.')
+parser.add_argument('--start_epoch', default=0, help='Starting epoch (for logging; to be overwritten when restoring file.')
+parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate.')
+parser.add_argument('--mini_data_size', type=int, default=None, help='Train only on this number of datapoints.')
+parser.add_argument('--grad_norm_clip', default=50, type=float, help='Clip gradients during training.')
+parser.add_argument('--checkpoint_grads', action='store_true', default=False, help='Whether to use gradient checkpointing in forward pass.')
+parser.add_argument('--n_bits', default=5, type=int, help='Number of bits for input images.')
+# distributed training params
+parser.add_argument('--distributed', action='store_true', default=False, help='Whether to use DistributedDataParallels on multiple machines and GPUs.')
+parser.add_argument('--world_size', type=int, default=1, help='Number of nodes for distributed training.')
+parser.add_argument('--local_rank', type=int, help='When provided, run model on this cuda device. When None, used by torch.distributed.launch utility to manage multi-GPU training.')
+# visualize
+parser.add_argument('--vis_img', type=str, help='Path to image file to manipulate attributes and visualize.')
+parser.add_argument('--vis_attrs', nargs='+', type=int, help='Which attribute to manipulate.')
+parser.add_argument('--vis_alphas', nargs='+', type=float, help='Step size on the manipulation direction.')
 
 
 best_eval_logprob = float('-inf')
@@ -69,6 +71,41 @@ best_eval_logprob = float('-inf')
 # --------------------
 # Data
 # --------------------
+
+def fetch_dataloader(args, train=True, data_dependent_init=False):
+    args.input_dims = {'mnist': (3,32,32), 'celeba': (3,64,64)}[args.dataset]
+
+    transforms = {'mnist': T.Compose([T.Pad(2),                                         # image to 32x32 same as CIFAR
+                                      T.RandomAffine(degrees=0, translate=(0.1, 0.1)),  # random shifts to fill the padded pixels
+                                      T.ToTensor(),
+                                      T.Lambda(lambda t: t + torch.rand_like(t)/2**8),  # dequantize
+                                      T.Lambda(lambda t: t.expand(3,-1,-1))]),          # expand to 3 channels
+
+                  'celeba': T.Compose([T.CenterCrop(148),  # RealNVP preprocessing
+                                       T.Resize(64),
+                                       T.Lambda(lambda im: np.array(im, dtype=np.float32)),                     # to numpy
+                                       T.Lambda(lambda x: np.floor(x / 2**(8 - args.n_bits)) / 2**args.n_bits), # lower bits
+                                       T.ToTensor(),  # note: if input to this transform is uint8, it divides by 255 and returns float
+                                       T.Lambda(lambda t: t + torch.rand_like(t) / 2**args.n_bits)])            # dequantize
+                  }[args.dataset]
+
+    dataset = {'mnist': MNIST, 'celeba': CelebA}[args.dataset]
+
+    # load the specific dataset
+    dataset = dataset(root=args.data_dir, train=train, transform=transforms)
+
+    if args.mini_data_size:
+        dataset.data = dataset.data[:args.mini_data_size]
+
+    # load sampler and dataloader
+    if args.distributed and train is True and not data_dependent_init:  # distributed training; but exclude initialization
+        sampler = torch.utils.data.distributed.DistributedSampler(dataset)
+    else:
+        sampler = None
+
+    batch_size = args.batch_size_init if data_dependent_init else args.batch_size  # if data dependent init use init batch size
+    kwargs = {'num_workers': 1, 'pin_memory': True} if args.device.type is 'cuda' else {}
+    return DataLoader(dataset, batch_size=batch_size, shuffle=(sampler is None), drop_last=True, sampler=sampler, **kwargs)
 
 
 # --------------------
