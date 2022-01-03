@@ -133,11 +133,21 @@ class PipelineModule(CustomModule):
         lpips = self.metric_lpips(fake, real)
         fid = self.metric_fid(fake, real)
 
+        latentMu = torch.mean(batch[DIK.STYLE_LATENT],dim=1).mean().item()
+        latentNorm = torch.norm(batch[DIK.STYLE_LATENT],dim=1).mean().item()
+        samples = self.flow(self.opt.batch_size)
+        nfMu = torch.norm(samples,dim=1).mean().item()
+        nfNorm = torch.norm(samples,dim=1).mean().item()
+
         self.log_dict({
             "val/psnr": psnr,
             "val/ssim": ssim,
             "val/lpips": lpips,
-            "val/fid": fid
+            "val/fid": fid,
+            "val/latentMu": latentMu,
+            "val/latentNorm": latentNorm,
+            "val/nfMu": nfMu,
+            "val/nfNorm": nfNorm
         })
 
     # Below methods simply forward the calls to the generator
