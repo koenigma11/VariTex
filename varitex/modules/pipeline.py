@@ -117,6 +117,8 @@ class PipelineModule(CustomModule):
             loss = self._generator_step(batch, batch_idx)
         elif optimizer_idx == 1:
             loss = self._discriminator_step(batch, batch_idx)
+        elif optimizer_idx == 2:
+            loss = -self.flow.log_prob(inputs=batch[DIK.STYLE_LATENT]).mean()
         else:
             raise Warning("Invalid optimizer index: {}".format(optimizer_idx))
         return loss
@@ -178,7 +180,8 @@ class PipelineModule(CustomModule):
         optimizers = list()
         # Important: Should have index 0
         if(self.opt.use_glo):
-            optimizers.append(torch.optim.Adam(list(self.generator.parameters()) + list(self.Z.parameters()), lr=self.opt.lr))
+            #optimizers.append(torch.optim.Adam(list(self.generator.parameters()) + list(self.Z.parameters()) + list(self.flow.parameters()), lr=self.opt.lr))
+            optimizers.append(torch.optim.Adam(list(self.generator.parameters()) + list(self.Z.parameters()) , lr=self.opt.lr))
         else:
             optimizers.append(torch.optim.Adam(self.generator.parameters() , lr=self.opt.lr))
 
@@ -186,6 +189,11 @@ class PipelineModule(CustomModule):
             # Needs index 1
             optimizers.append(torch.optim.Adam(self.discriminator.parameters(),
                                                lr=self.opt.lr_discriminator))
+
+        if getattr(self.opt, "lambda_flow", 0) > 0:
+            # Needs index 2
+            optimizers.append(torch.optim.Adam(self.flow.parameters(),
+                                               lr=self.opt.lr_flow))
         return optimizers, []
 
     def _generator_step(self, batch, batch_idx):
@@ -251,8 +259,8 @@ class PipelineModule(CustomModule):
                self.opt.lambda_kl * loss_kl + \
                self.opt.lambda_vgg * loss_vgg + \
                self.opt.lambda_segmentation * loss_segmentation + \
-               self.opt.lambda_rgb_texture * loss_rgb_texture + \
-               self.opt.lambda_flow * loss_flow
+               self.opt.lambda_rgb_texture * loss_rgb_texture# + \
+        #loss+=self.opt.lambda_flow * loss_flow
 
         data_log = {
             "train/generator": loss_gan,
@@ -262,8 +270,8 @@ class PipelineModule(CustomModule):
             "train/vgg_l1": loss_vgg,
             "train/segmentation": loss_segmentation,
             "train/rgb_texture": loss_rgb_texture,
-            "train/loss": loss_unweighted,
-            "train/flow": loss_flow
+            "train/loss": loss_unweighted
+            #"train/flow": loss_flow
         }
         # Filter out zero losses
         data_log = {k: v.clone().detach() for k, v in data_log.items() if v != 0}
