@@ -118,7 +118,8 @@ class PipelineModule(CustomModule):
         elif optimizer_idx == 1:
             loss = self._discriminator_step(batch, batch_idx)
         elif optimizer_idx == 2:
-            loss = -self.flow.log_prob(inputs=batch[DIK.STYLE_LATENT]).mean()
+            batch_idxs = torch.arange(batch_idx*self.opt.batch_size,(batch_idx+1)*self.opt.batch_size, dtype=torch.long)
+            loss = -self.flow.log_prob(inputs=self.Z(batch_idxs.cuda())).mean()
         else:
             raise Warning("Invalid optimizer index: {}".format(optimizer_idx))
         return loss
