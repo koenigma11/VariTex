@@ -135,7 +135,7 @@ class PipelineModule(CustomModule):
 
         latentMu = torch.mean(batch[DIK.STYLE_LATENT],dim=1).mean().item()
         latentNorm = torch.norm(batch[DIK.STYLE_LATENT],dim=1).mean().item()
-        samples = self.flow(self.opt.batch_size)
+        samples = self.flow.sample(self.opt.batch_size)
         nfMu = torch.norm(samples,dim=1).mean().item()
         nfNorm = torch.norm(samples,dim=1).mean().item()
 

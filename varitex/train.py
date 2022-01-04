@@ -12,19 +12,25 @@ from torch.utils.data import DataLoader
 import sys
 
 
-try:
-    from varitex.custom_callbacks.callbacks import ImageLogCallback
-    from varitex.data.npy_dataset import NPYDataset
-    from varitex.modules.pipeline import PipelineModule
-    from varitex.options.train_options import TrainOptions
-    from mutil.files import copy_src, mkdir
-except ModuleNotFoundError:
-    print(sys.path)
-    print("Have you added VariTex to your pythonpath?")
-    print('To fix this error, go to the root path of the repository ".../VariTex/" \n '
-          'and run \n'
-          "export PYTHONPATH=$PYTHONPATH:$(pwd)")
-    exit()
+# try:
+#     from varitex.custom_callbacks.callbacks import ImageLogCallback
+#     from varitex.data.npy_dataset import NPYDataset
+#     from varitex.modules.pipeline import PipelineModule
+#     from varitex.options.train_options import TrainOptions
+#     from mutil.files import copy_src, mkdir
+# except ModuleNotFoundError:
+#     print(sys.path)
+#     print("Have you added VariTex to your pythonpath?")
+#     print('To fix this error, go to the root path of the repository ".../VariTex/" \n '
+#           'and run \n'
+#           "export PYTHONPATH=$PYTHONPATH:$(pwd)")
+#     exit()
+
+from varitex.custom_callbacks.callbacks import ImageLogCallback
+from varitex.data.npy_dataset import NPYDataset
+from varitex.modules.pipeline import PipelineModule
+from varitex.options.train_options import TrainOptions
+from mutil.files import copy_src, mkdir
 
 
 if __name__ == "__main__":
