@@ -68,6 +68,7 @@ class BaseOptions:
         parser.add_argument('--use_NF', action="store_true",  help="Use Normalizing flows. Default is False!")
         parser.add_argument('--lr_flow', type=float, default=1e-5)
         parser.add_argument('--lambda_flow', type=float, default=0.001)
+        #parser.add_argument('--alternate', action="store_true",  help="Using alternate we alternate between ")
         self.initialized = True
         return parser
 

@@ -119,7 +119,7 @@ class PipelineModule(CustomModule):
             loss = self._discriminator_step(batch, batch_idx)
         elif optimizer_idx == 2:
             batch_idxs = torch.arange(batch_idx*self.opt.batch_size,(batch_idx+1)*self.opt.batch_size, dtype=torch.long)
-            loss = -self.flow.log_prob(inputs=self.Z(batch_idxs.cuda())).mean()
+            loss = -self.flow.log_prob(inputs=self.Z(batch_idxs.cuda())).mean() *self.opt.lambda_flow
         else:
             raise Warning("Invalid optimizer index: {}".format(optimizer_idx))
         return loss
@@ -252,7 +252,7 @@ class PipelineModule(CustomModule):
             texture *= batch[DIK.MASK_UV].expand_as(texture)
             loss_rgb_texture = l2_loss(texture, masked_image_in)
 
-        loss_unweighted = loss_gan + loss_gan_features + loss_l2 + loss_kl + loss_vgg + loss_segmentation + loss_rgb_texture
+        loss_unweighted = loss_gan + loss_gan_features + loss_l2 + loss_kl + loss_vgg + loss_segmentation + loss_rgb_texture + loss_flow
 
         loss = self.opt.lambda_gan * loss_gan + \
                self.opt.lambda_discriminator_features * loss_gan_features + \
@@ -260,8 +260,8 @@ class PipelineModule(CustomModule):
                self.opt.lambda_kl * loss_kl + \
                self.opt.lambda_vgg * loss_vgg + \
                self.opt.lambda_segmentation * loss_segmentation + \
-               self.opt.lambda_rgb_texture * loss_rgb_texture# + \
-        #loss+=self.opt.lambda_flow * loss_flow
+               self.opt.lambda_rgb_texture * loss_rgb_texture + \
+               self.opt.lambda_flow * loss_flow
 
         data_log = {
             "train/generator": loss_gan,
@@ -271,8 +271,9 @@ class PipelineModule(CustomModule):
             "train/vgg_l1": loss_vgg,
             "train/segmentation": loss_segmentation,
             "train/rgb_texture": loss_rgb_texture,
-            "train/loss": loss_unweighted
-            #"train/flow": loss_flow
+            "train/lossUnweighted": loss_unweighted,
+            "train/losweighted": loss,
+            "train/flow": loss_flow
         }
         # Filter out zero losses
         data_log = {k: v.clone().detach() for k, v in data_log.items() if v != 0}
