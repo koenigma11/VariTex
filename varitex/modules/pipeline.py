@@ -98,7 +98,10 @@ class PipelineModule(CustomModule):
             if(batch_idx==0):
                 ## Take some norm snapshots for later visualization
                 folder = 'norm_snapshots'
-                path_folder = os.path.join(os.getenv("OP"), folder)
+                path_folder = os.path.join(os.getenv("OP"), self.opt.experiment_name)
+                os.makedirs(path_folder, exist_ok=True)
+                path_folder = os.path.join(path_folder, folder)
+                os.makedirs(path_folder, exist_ok=True)
                 file_name = os.path.join(path_folder, 'norms_epoch_'+str(self.current_epoch))
                 norms = torch.linalg.norm(self.Z.weight,dim=1)
                 np.save(file_name, norms.detach().cpu().numpy())
@@ -117,7 +120,7 @@ class PipelineModule(CustomModule):
             loss = self._generator_step(batch, batch_idx)
         elif optimizer_idx == 1:
             loss = self._discriminator_step(batch, batch_idx)
-        elif optimizer_idx == 2:
+        elif (optimizer_idx == 2 and self.opt.alternate):
             batch_idxs = torch.arange(batch_idx*self.opt.batch_size,(batch_idx+1)*self.opt.batch_size, dtype=torch.long)
             loss = -self.flow.log_prob(inputs=self.Z(batch_idxs.cuda())).mean() *self.opt.lambda_flow
         else:
@@ -137,10 +140,10 @@ class PipelineModule(CustomModule):
         fid = self.metric_fid(fake, real)
 
         latentMu = torch.mean(batch[DIK.STYLE_LATENT],dim=1).mean().item()
-        latentNorm = torch.norm(batch[DIK.STYLE_LATENT],dim=1).mean().item()
+        latentStd = torch.std(batch[DIK.STYLE_LATENT],dim=1).mean().item()
         samples = self.flow.sample(self.opt.batch_size)
-        nfMu = torch.norm(samples,dim=1).mean().item()
-        nfNorm = torch.norm(samples,dim=1).mean().item()
+        nfMu = torch.mean(samples,dim=1).mean().item()
+        nfStd = torch.std(samples,dim=1).mean().item()
 
         self.log_dict({
             "val/psnr": psnr,
@@ -148,9 +151,9 @@ class PipelineModule(CustomModule):
             "val/lpips": lpips,
             "val/fid": fid,
             "val/latentMu": latentMu,
-            "val/latentNorm": latentNorm,
+            "val/latentStd": latentStd,
             "val/nfMu": nfMu,
-            "val/nfNorm": nfNorm
+            "val/nfStd": nfStd
         })
 
     # Below methods simply forward the calls to the generator
@@ -180,7 +183,9 @@ class PipelineModule(CustomModule):
         # We use one optimizer for the generator and one for the discriminator.
         optimizers = list()
         # Important: Should have index 0
-        if(self.opt.use_glo):
+        if(not self.opt.alternate and self.opt.use_NF):
+            optimizers.append(torch.optim.Adam(list(self.generator.parameters()) + list(self.Z.parameters()) + list(self.flow.parameters()), lr=self.opt.lr))
+        elif(self.opt.use_glo):
             #optimizers.append(torch.optim.Adam(list(self.generator.parameters()) + list(self.Z.parameters()) + list(self.flow.parameters()), lr=self.opt.lr))
             optimizers.append(torch.optim.Adam(list(self.generator.parameters()) + list(self.Z.parameters()) , lr=self.opt.lr))
         else:
@@ -191,7 +196,7 @@ class PipelineModule(CustomModule):
             optimizers.append(torch.optim.Adam(self.discriminator.parameters(),
                                                lr=self.opt.lr_discriminator))
 
-        if getattr(self.opt, "lambda_flow", 0) > 0:
+        if self.opt.alternate:
             # Needs index 2
             optimizers.append(torch.optim.Adam(self.flow.parameters(),
                                                lr=self.opt.lr_flow))
@@ -214,7 +219,7 @@ class PipelineModule(CustomModule):
             loss_kl=0
         else:
             loss_kl = kl_divergence(batch[DIK.STYLE_LATENT_MU], batch[DIK.STYLE_LATENT_STD]).mean()
-        if self.opt.lambda_flow > 0:
+        if not self.opt.alternate:
             loss_flow = -self.flow.log_prob(inputs=batch[DIK.STYLE_LATENT]).mean()
 
         if getattr(self.opt, "lambda_gan", 0) > 0:
