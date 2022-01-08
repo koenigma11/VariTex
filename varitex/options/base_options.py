@@ -66,7 +66,7 @@ class BaseOptions:
         parser.add_argument('--dataroot_npy_pre',  default=os.path.join(os.getenv("DP"), 'FFHQ/preprocessed_dataset_old'),
                             help='Path to the folder with the preprocessed datasets. Should contain .npy files "R", "t", "s", "sp", "ep", "segmentation", "uv", "filename","images", and a .npz file "dataset_splits".')
         parser.add_argument('--use_NF', action="store_true",  help="Use Normalizing flows. Default is False!")
-        parser.add_argument('--lambda_flow', type=float, default=0.01)
+        parser.add_argument('--lambda_flow', type=float, default=0.001)
         parser.add_argument('--lr_flow', type=float, default=1e-3)
         parser.add_argument('--c', type=float, default=0.001)
         parser.add_argument('--alternate', action="store_true",  help="Using alternate we alternate between ")
