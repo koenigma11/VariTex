@@ -134,10 +134,10 @@ class PipelineModule(CustomModule):
         fake = batch[DIK.IMAGE_OUT]
         real = batch[DIK.IMAGE_IN]
 
-        psnr = self.metric_psnr(fake, real)
-        ssim = self.metric_ssim(fake, real)
-        lpips = self.metric_lpips(fake, real)
-        fid = self.metric_fid(fake, real)
+        # psnr = self.metric_psnr(fake, real)
+        # ssim = self.metric_ssim(fake, real)
+        # lpips = self.metric_lpips(fake, real)
+        # fid = self.metric_fid(fake, real)
 
         latentMu = torch.mean(batch[DIK.STYLE_LATENT],dim=1).mean().item()
         latentStd = torch.std(batch[DIK.STYLE_LATENT],dim=1).mean().item()
@@ -146,10 +146,10 @@ class PipelineModule(CustomModule):
         nfStd = torch.std(samples,dim=1).mean().item()
 
         self.log_dict({
-            "val/psnr": psnr,
-            "val/ssim": ssim,
-            "val/lpips": lpips,
-            "val/fid": fid,
+            #"val/psnr": psnr,
+            #"val/ssim": ssim,
+            #"val/lpips": lpips,
+            #"val/fid": fid,
             "val/latentMu": latentMu,
             "val/latentStd": latentStd,
             "val/nfMu": nfMu,
