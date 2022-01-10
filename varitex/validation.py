@@ -165,18 +165,21 @@ class Validation:
             if(sampling == 'latent'):
                 idx = np.random.randint(0,self.dataset.N-2,(1,1)).squeeze()
                 batch = self.dataloader.dataset.get_unsqueezed(idx)
+                batch[DIK.STYLE_LATENT] = self.model.Z.weight[idx]
             else:
                 pass
         elif(modelName == 'eval_nonorm'):
             if(sampling == 'latent'):
                 idx = np.random.randint(0,self.dataset.N-2,(1,1)).squeeze()
                 batch = self.dataloader.dataset.get_unsqueezed(idx)
+                batch[DIK.STYLE_LATENT] = self.model.Z.weight[idx]
             else:
                 pass
         elif(modelName == 'eval_nf_glo_alternate'):
             if(sampling == 'latent'):
                 idx = np.random.randint(0,self.dataset.N-2,(1,1)).squeeze()
                 batch = self.dataloader.dataset.get_unsqueezed(idx)
+                batch[DIK.STYLE_LATENT] = self.model.Z.weight[idx]
             else:
                 batch = {}
                 batch[DIK.STYLE_LATENT] = self.flow.sample(1)
@@ -184,6 +187,7 @@ class Validation:
             if(sampling == 'latent'):
                 idx = np.random.randint(0,self.dataset.N-2,(1,1)).squeeze()
                 batch = self.dataloader.dataset.get_unsqueezed(idx)
+                batch[DIK.STYLE_LATENT] = self.model.Z.weight[idx]
             else:
                 batch = {}
                 batch[DIK.STYLE_LATENT] = self.flow.sample(1)
