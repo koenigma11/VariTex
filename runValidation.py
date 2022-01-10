@@ -168,9 +168,7 @@ def writetoFile(valDict, metric):
         f.write(JSON)
 
 model_names=['default', 'norm', 'nonorm', 'nf_glo_alternate', 'nf_glo_joint']
-model_names=['nf_glo_alternate', 'nf_glo_joint']
-model_names=['default', 'norm', 'nonorm']
-#model_names=['default', 'nf_glo_alternate', 'nf_glo_joint']
+model_names=['default', 'nf_glo_alternate', 'nf_glo_joint']
 for modelName in model_names:
         print("Validating Model "+ modelName + '...')
         opt = getModel(modelName,opt)
@@ -178,9 +176,9 @@ for modelName in model_names:
         vals = validation.Validation(opt)
         #getStandards(vals)
         shapes = ['constant', 'sampled']
-        interpolateds = [None, 'linear', 'spherical']
+        interpolateds = ['linear', 'spherical']
         samplings = ['latent', 'normal']
-        sampling = 'latent'
+        sampling = 'sampled'
         for interpolated in interpolateds:
             for shape in shapes:
                 getFID(vals, interpolated=interpolated, shape=shape, sampling= sampling)

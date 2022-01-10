@@ -7,7 +7,11 @@ from mutil.files import mkdir
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from mutil.pytorch_utils import ImageNetNormalizeTransformInverse, to_tensor, theta2rotation_matrix
-
+from nflows.flows.base import Flow
+from nflows.distributions.normal import StandardNormal
+from nflows.transforms.base import CompositeTransform
+from nflows.transforms.autoregressive import MaskedAffineAutoregressiveTransform
+from nflows.transforms.permutations import ReversePermutation
 
 
 try:
@@ -61,6 +65,25 @@ class Validation:
         self.t = torch.Tensor([0, -2, -57]).to(self.device)
         self.uv_factory_bfm = BFMUVFactory(opt=self.opt, use_bfm_gpu=self.opt.device == 'cuda')
         self.visualizer_complete = CompleteVisualizer(opt=self.opt, bfm_uv_factory=self.uv_factory_bfm)
+        self.flow=None
+        base_dist = StandardNormal(shape=[256])
+        transforms = []
+        for _ in range(4):
+            transforms.append(ReversePermutation(features=256))
+            transforms.append(MaskedAffineAutoregressiveTransform(features=256,
+                                                                  hidden_features=256))
+        transform = CompositeTransform(transforms)
+        if(self.opt.experiment_name=='eval_norm'):
+            currentPath = '/home/matthias/ETH/Thesis/Final_Models/GLO_Norm/checkpoints/final_norm.ckpt'
+            currentDicts = torch.load(currentPath)
+            self.flow = Flow(transform, base_dist)
+            self.flow.load_state_dict(currentDicts['model_state_dict'])
+        elif(self.opt.experiment_name=='eval_nonorm'):
+            currentPath = '/home/matthias/ETH/Thesis/Final_Models/GLO_NoNorm/checkpoints/final_nonorm.ckpt'
+            currentDicts = torch.load(currentPath)
+            self.flow = Flow(transform, base_dist)
+            self.flow.load_state_dict(currentDicts['model_state_dict'])
+
 
 
     def inference_ffhq(self, metric, n=3000, interpolated=None, shape=None, sampling=None):
@@ -160,21 +183,23 @@ class Validation:
             else:
                 ## normal
                 batch = {}
-                batch[DIK.STYLE_LATENT] = torch.randn(size=(1,256))
+                batch[DIK.STYLE_LATENT] = torch.randn(size=(1,256)).to(self.device)
         elif(modelName == 'eval_norm'):
             if(sampling == 'latent'):
                 idx = np.random.randint(0,self.dataset.N-2,(1,1)).squeeze()
                 batch = self.dataloader.dataset.get_unsqueezed(idx)
                 batch[DIK.STYLE_LATENT] = self.model.Z.weight[idx]
             else:
-                pass
+                batch = {}
+                batch[DIK.STYLE_LATENT] = self.flow.sample(1).to(self.device)
         elif(modelName == 'eval_nonorm'):
             if(sampling == 'latent'):
                 idx = np.random.randint(0,self.dataset.N-2,(1,1)).squeeze()
                 batch = self.dataloader.dataset.get_unsqueezed(idx)
                 batch[DIK.STYLE_LATENT] = self.model.Z.weight[idx]
             else:
-                pass
+                batch = {}
+                batch[DIK.STYLE_LATENT] = self.flow.sample(1).to(self.device)
         elif(modelName == 'eval_nf_glo_alternate'):
             if(sampling == 'latent'):
                 idx = np.random.randint(0,self.dataset.N-2,(1,1)).squeeze()
@@ -182,7 +207,7 @@ class Validation:
                 batch[DIK.STYLE_LATENT] = self.model.Z.weight[idx]
             else:
                 batch = {}
-                batch[DIK.STYLE_LATENT] = self.flow.sample(1)
+                batch[DIK.STYLE_LATENT] = self.model.flow.sample(1).to(self.device)
         elif(modelName == 'eval_nf_glo_joint'):
             if(sampling == 'latent'):
                 idx = np.random.randint(0,self.dataset.N-2,(1,1)).squeeze()
@@ -190,7 +215,7 @@ class Validation:
                 batch[DIK.STYLE_LATENT] = self.model.Z.weight[idx]
             else:
                 batch = {}
-                batch[DIK.STYLE_LATENT] = self.flow.sample(1)
+                batch[DIK.STYLE_LATENT] = self.model.flow.sample(1).to(self.device)
         batch = self.getBatch(batch, mode = shape)
         return batch
 
