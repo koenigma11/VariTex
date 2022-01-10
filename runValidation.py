@@ -169,6 +169,7 @@ def writetoFile(valDict, metric):
 
 model_names=['default', 'norm', 'nonorm', 'nf_glo_alternate', 'nf_glo_joint']
 model_names=['nf_glo_alternate', 'nf_glo_joint']
+model_names=['default', 'norm', 'nonorm']
 #model_names=['default', 'nf_glo_alternate', 'nf_glo_joint']
 for modelName in model_names:
         print("Validating Model "+ modelName + '...')
