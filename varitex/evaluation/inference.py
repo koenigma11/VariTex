@@ -30,8 +30,8 @@ def inference_ffhq(opt, results_folder, n=3000):
     mkdir(results_folder)
     visualizer = Visualizer(opt, return_format='pil')
 
-    dataset = NPYDataset(opt, augmentation=False, split='val')
-    dataloader = iter(DataLoader(dataset, batch_size=1, num_workers=0, shuffle=False))
+    dataset = NPYDataset(opt, augmentation=False, split='train')
+    dataloader = iter(DataLoader(dataset, batch_size=opt.batch_size, num_workers=1, shuffle=False, drop_last=True))
     model = get_model(opt)
     visualizer.mask_key = DIK.SEGMENTATION_PREDICTED
 
@@ -40,15 +40,21 @@ def inference_ffhq(opt, results_folder, n=3000):
     for i, batch in tqdm(enumerate(dataloader)):
         batch = model.forward(batch, i, std_multiplier=0)
         file_id = batch[DIK.FILENAME][0]
-        latent_code = batch[DIK.STYLE_LATENT_MU].detach().cpu().numpy()[0]
-        latent_std = batch[DIK.STYLE_LATENT_STD].detach().cpu().numpy()[0]
-        result.append([latent_code, latent_std])
+        if(opt.use_glo):
+            latent_code = batch[DIK.STYLE_LATENT]
+        else:
+            latent_code = batch[DIK.STYLE_LATENT_MU].detach().cpu().numpy()[0]
+            latent_std = batch[DIK.STYLE_LATENT_STD].detach().cpu().numpy()[0]
+            #result.append([latent_code, latent_std])
 
         out = visualizer.tensor2image(batch[DIK.IMAGE_OUT][0], batch=batch)
+        outpu =  batch[DIK.IMAGE_OUT][1]
+        inpu = batch[DIK.IMAGE_IN][1]
+        return inpu, outpu
         out = visualizer.mask(out, batch, white_bg=False)
 
-        out = visualizer.format_output(out, return_format='pil')
-        out.save(os.path.join(results_folder, "{}.png".format(file_id)))
+        #out = visualizer.format_output(out, return_format='pil')
+        #out.save(os.path.join(results_folder, "{}.png".format(file_id)))
 
         if i >= n:
             break

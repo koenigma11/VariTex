@@ -105,6 +105,7 @@ class Generator(CustomModule):
         return batch
 
     def forward_merge_textures(self, batch, batch_idx):
+        #pdb.set_trace()
         batch[DIK.FULL_FEATUREIMAGE] = torch.cat(
             [batch[DIK.FACE_FEATUREIMAGE], batch[DIK.ADDITIVE_FEATUREIMAGE]], 1)
         return batch
@@ -117,7 +118,6 @@ class Generator(CustomModule):
         #pdb.set_trace()
         uv_texture = batch[DIK.TEXTURE_PERSON]
         uv_map = batch[DIK.UV_RENDERED]
-
         texture_sampled = torch.nn.functional.grid_sample(uv_texture, uv_map, mode='bilinear',
                                                           padding_mode='border', align_corners=False)
 

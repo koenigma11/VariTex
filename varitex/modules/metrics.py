@@ -1,3 +1,5 @@
+import pdb
+
 import lpips
 import torch
 from mutil.pytorch_utils import ImageNetNormalizeTransformInverse
@@ -42,7 +44,7 @@ class LPIPS(AbstractMetric):
         preds = self.unnormalize(preds)
         target = self.unnormalize(target)
         # Might need a .mean()
-        return self.metric(preds, target, normalize=True).mean()  # With normalize, lpips expects the range [0, 1]
+        return self.metric(preds, target, normalize=False).mean()  # With normalize, lpips expects the range [0, 1]
 
 class FID(AbstractMetric):
     scale = 255

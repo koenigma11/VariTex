@@ -127,7 +127,6 @@ class PipelineModule(CustomModule):
             raise Warning("Invalid optimizer index: {}".format(optimizer_idx))
         return loss
 
-                
 
     def validation_step(self, batch, batch_idx, std_multiplier=1):
         batch = self.forward(batch, batch_idx, std_multiplier=std_multiplier)
@@ -219,7 +218,7 @@ class PipelineModule(CustomModule):
             loss_kl=0
         else:
             loss_kl = kl_divergence(batch[DIK.STYLE_LATENT_MU], batch[DIK.STYLE_LATENT_STD]).mean()
-        if not self.opt.alternate:
+        if (not self.opt.alternate and self.opt.use_NF):
             loss_flow = -self.flow.log_prob(inputs=batch[DIK.STYLE_LATENT]).mean()
 
         if getattr(self.opt, "lambda_gan", 0) > 0:

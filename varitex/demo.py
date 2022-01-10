@@ -50,6 +50,7 @@ class Demo:
             DIK.COEFF_EXPRESSION: ep,
             DIK.T: t
         }
+
         batch = {k: v.to(self.device) for k, v in batch.items()}
 
         batch = self.visualizer_complete.visualize_single(self.pipeline, batch, 0, theta_all=theta,
