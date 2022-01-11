@@ -185,6 +185,6 @@ for modelName in model_names:
         for interpolated in interpolateds:
             for shape in shapes:
                 getFID(vals, interpolated=interpolated, shape=shape, sampling= sampling)
-        getFID(vals, interpolated='spherical', shape='constant', sampling= 'sampled')
-        getFID(vals, interpolated='spherical', shape='sampled', sampling= 'sampled')
+        # getFID(vals, interpolated='spherical', shape='constant', sampling= 'sampled')
+        # getFID(vals, interpolated='spherical', shape='sampled', sampling= 'sampled')
 #out = vals.sample()

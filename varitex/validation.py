@@ -73,16 +73,16 @@ class Validation:
             transforms.append(MaskedAffineAutoregressiveTransform(features=256,
                                                                   hidden_features=256))
         transform = CompositeTransform(transforms)
-        if(self.opt.experiment_name=='eval_norm'):
-            currentPath = '/home/matthias/ETH/Thesis/Final_Models/GLO_Norm/checkpoints/final_norm.ckpt'
-            currentDicts = torch.load(currentPath)
-            self.flow = Flow(transform, base_dist)
-            self.flow.load_state_dict(currentDicts['model_state_dict'])
-        elif(self.opt.experiment_name=='eval_nonorm'):
-            currentPath = '/home/matthias/ETH/Thesis/Final_Models/GLO_NoNorm/checkpoints/final_nonorm.ckpt'
-            currentDicts = torch.load(currentPath)
-            self.flow = Flow(transform, base_dist)
-            self.flow.load_state_dict(currentDicts['model_state_dict'])
+        # if(self.opt.experiment_name=='eval_norm'):
+        #     currentPath = '/home/matthias/ETH/Thesis/Final_Models/GLO_Norm/checkpoints/final_norm.ckpt'
+        #     currentDicts = torch.load(currentPath)
+        #     self.flow = Flow(transform, base_dist)
+        #     self.flow.load_state_dict(currentDicts['model_state_dict'])
+        # elif(self.opt.experiment_name=='eval_nonorm'):
+        #     currentPath = '/home/matthias/ETH/Thesis/Final_Models/GLO_NoNorm/checkpoints/final_nonorm.ckpt'
+        #     currentDicts = torch.load(currentPath)
+        #     self.flow = Flow(transform, base_dist)
+        #     self.flow.load_state_dict(currentDicts['model_state_dict'])
 
 
 
