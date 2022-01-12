@@ -181,7 +181,7 @@ if __name__ == "__main__":
         print("Testing Run of validation")
     model_names=['default', 'nf_glo_joint']
     model_names=['nf_glo_joint']
-    #model_names=['norm', 'nonorm']
+    model_names=['nonorm']
     for modelName in model_names:
             print("Validating Model "+ modelName + '...')
             opt = getOpt()
@@ -193,6 +193,7 @@ if __name__ == "__main__":
             shape = 'sampled'
             interpolateds = ['linear', 'spherical']
             samplings = ['latent', 'sampled']
+            samplings = ['sampled','latent']
             for sampling in samplings:
                 for interpolated in interpolateds:
                     getFID(vals, test= test, interpolated=interpolated, shape=shape, sampling= sampling)
