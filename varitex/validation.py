@@ -63,8 +63,8 @@ class Validation:
         self.ep = torch.zeros((1,100)).to(self.device)#expressions[index_ep].unsqueeze(0)
         self.theta = torch.Tensor((0, 0, 0)).to(self.device)
         self.t = torch.Tensor([0, -2, -57]).to(self.device)
-        self.uv_factory_bfm = BFMUVFactory(opt=self.opt, use_bfm_gpu=self.opt.device == 'cuda')
-        self.visualizer_complete = CompleteVisualizer(opt=self.opt, bfm_uv_factory=self.uv_factory_bfm)
+        #self.uv_factory_bfm = BFMUVFactory(opt=self.opt, use_bfm_gpu=self.opt.device == 'cuda')
+        #self.visualizer_complete = CompleteVisualizer(opt=self.opt, bfm_uv_factory=self.uv_factory_bfm)
         self.flow=None
         base_dist = StandardNormal(shape=[256])
         transforms = []
@@ -103,13 +103,12 @@ class Validation:
         self.fid_std = 0
         fakes = []
         batch_idx = -1
-        for i, batchGT in tqdm(enumerate(self.dataloader)):
+        for i, batch in tqdm(enumerate(self.dataloader)):
             # if(not(shape ==  None)):
             #     batch = self.getShape(batch, mode=shape)
             #     if(not(interpolated ==  None)):
-            batch = {}
             batch = self.getShape(batch, mode=shape)
-            batch = self.interpolate(batch, interpolationMode=interpolated, sampling=sampling)
+            batch = self.interpolate(batch, interpolationMode=interpolated, sampling=sampling ,shape=shape)
             if (len(batch[DIK.STYLE_LATENT].shape) == 1):
                 batch[DIK.STYLE_LATENT] = batch[DIK.STYLE_LATENT].unsqueeze(0)
             if(self.opt.experiment_name=='eval_Default' and not(interpolated ==  None)):
@@ -117,8 +116,7 @@ class Validation:
             else:
                 batch = self.model.forward(batch, -1, std_multiplier=0)
             fake = batch[DIK.IMAGE_OUT]
-            real = batchGT[DIK.IMAGE_IN]
-            fakes.append(fake.detach().cpu().numpy())
+            real = batch[DIK.IMAGE_IN]
 
             if(metric=='standards'):
                 """Standard Metrics"""
@@ -132,8 +130,8 @@ class Validation:
                 self.metric_fid_std.fid.update(fake.to(torch.uint8).cpu(), real=False)
 
             """PPL"""
-            if(n%10000==0):
-                fakes.append(fake)
+            if(n%1000==0):
+                fakes.append(fake.detach().cpu().numpy())
             if(i*self.opt.batch_size>n):
                 break
         if(metric=='fid'):
@@ -163,22 +161,22 @@ class Validation:
             batch[DIK.UV_RENDERED] = uv.expand(self.opt.batch_size, -1, -1, -1).to(self.device)
         elif(mode == "sampled"):
             idx = np.random.randint(0,self.datasetVal.N,(1,1)).squeeze()
-            batch2 = self.dataloaderVal.dataset.get_unsqueezed(idx)
-            batch[DIK.COEFF_SHAPE] = batch2[DIK.COEFF_SHAPE]
-            batch[DIK.COEFF_EXPRESSION] = batch2[DIK.COEFF_EXPRESSION]
-            batch[DIK.T] = self.t
-            batch[DIK.UV_RENDERED] = batch2[DIK.UV_RENDERED]
+            # batch2 = self.dataloaderVal.dataset.get_unsqueezed(idx)
+            # batch[DIK.COEFF_SHAPE] = batch2[DIK.COEFF_SHAPE]
+            # batch[DIK.COEFF_EXPRESSION] = batch2[DIK.COEFF_EXPRESSION]
+            # batch[DIK.T] = self.t
+            batch[DIK.UV_RENDERED] = self.dataloaderVal.dataset.get_unsqueezed(idx)[DIK.UV_RENDERED]
         else:
             print("Given Shape mode not recognized")
         return batch
     def interpolate(self,batch, interpolationMode='linear', sampling='latent',shape='constant'):
-        batch1 = self.sample(sampling=sampling, shape=shape)
-        batch2 = self.sample(sampling=sampling, shape=shape)
+        batch1STL = self.sample(sampling=sampling, shape=shape)
+        batch2STL = self.sample(sampling=sampling, shape=shape)
         t = torch.rand(1).to(self.device)
         if(interpolationMode=='linear'):
-            batch[DIK.STYLE_LATENT] = torch.lerp(batch1[DIK.STYLE_LATENT],batch2[DIK.STYLE_LATENT],t)
+            batch[DIK.STYLE_LATENT] = torch.lerp(batch1STL,batch2STL,t)
         else:
-            batch[DIK.STYLE_LATENT] = self.slerp(batch1[DIK.STYLE_LATENT],batch2[DIK.STYLE_LATENT],t)
+            batch[DIK.STYLE_LATENT] = self.slerp(batch1STL,batch2STL,t)
         return batch
 
     def sample(self, sampling='latent', shape='constant'):
@@ -192,7 +190,7 @@ class Validation:
                 batch = self.model.generator.forward_encoded2latent_distribution(batch)  # Compute mu and std
                 q = torch.distributions.Normal(batch[DIK.STYLE_LATENT_MU], batch[DIK.STYLE_LATENT_STD] * 1)
                 z = q.rsample()
-                batch[DIK.STYLE_LATENT] = z
+                STL = z
             else:
                 ## normal
                 batch = {}
@@ -201,37 +199,39 @@ class Validation:
             if(sampling == 'latent'):
                 idx = np.random.randint(0,self.dataset.N-2,(1,1)).squeeze()
                 batch = self.dataloader.dataset.get_unsqueezed(idx)
-                batch[DIK.STYLE_LATENT] = self.model.Z.weight[idx]
+                STL = self.model.Z.weight[idx]
             else:
                 batch = {}
-                batch[DIK.STYLE_LATENT] = self.flow.sample(1).to(self.device)
+                STL = self.flow.sample(1).to(self.device)
         elif(modelName == 'eval_nonorm'):
             if(sampling == 'latent'):
                 idx = np.random.randint(0,self.dataset.N-2,(1,1)).squeeze()
                 batch = self.dataloader.dataset.get_unsqueezed(idx)
-                batch[DIK.STYLE_LATENT] = self.model.Z.weight[idx]
+                STL = self.model.Z.weight[idx]
             else:
                 batch = {}
-                batch[DIK.STYLE_LATENT] = self.flow.sample(1).to(self.device)
+                STL = self.flow.sample(1).to(self.device)
         elif(modelName == 'eval_nf_glo_alternate'):
             if(sampling == 'latent'):
                 idx = np.random.randint(0,self.dataset.N-2,(1,1)).squeeze()
                 batch = self.dataloader.dataset.get_unsqueezed(idx)
-                batch[DIK.STYLE_LATENT] = self.model.Z.weight[idx]
+                STL = self.model.Z.weight[idx]
             else:
-                batch = {}
-                batch[DIK.STYLE_LATENT] = self.model.flow.sample(1).to(self.device)
+                #batch = {}
+                STL = self.model.flow.sample(1).to(self.device)
         elif(modelName == 'eval_nf_glo_joint'):
             if(sampling == 'latent'):
                 idx = np.random.randint(0,self.dataset.N-2,(1,1)).squeeze()
-                batch = self.dataloader.dataset.get_unsqueezed(idx)
-                batch[DIK.STYLE_LATENT] = self.model.Z.weight[idx]
+                #batch = self.dataloader.dataset.get_unsqueezed(idx)
+                STL = self.model.Z.weight[idx]
             else:
                 print("Doing Sampled Testing")
-                batch = {}
-                batch[DIK.STYLE_LATENT] = self.model.flow.sample(1).to(self.device)
-        batch = self.getShape(batch, mode = shape)
-        return batch
+                # batch = {}
+                # batch[DIK.STYLE_LATENT] = self.model.flow.sample(1).to(self.device)
+                STL = self.model.flow.sample(1).to(self.device)
+        #batch = self.getShape(batch, mode = shape)
+        del batch
+        return STL
 
     def sampleInterpolated(self, num_samples):
         # latent1 =
