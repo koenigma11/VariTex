@@ -58,46 +58,13 @@ import matplotlib.pyplot as plt
 ckptFolder ='/home/matthias/ETH/Thesis/VariTexLocal/output/ckpts/Res128_GLO_NoNorm'
 filename = 'epoch=43-step=377079.ckpt'
 Res128_nonorm_path = os.path.join(ckptFolder, filename)
-opt = {
-
-        #"checkpoint": os.path.join(os.getenv("CP", "pretrained/ep44.ckpt")),
-        "checkpoint": Res128_nonorm_path,
-        "dataroot_npy": os.path.join(os.getenv("DP", ""), 'FFHQ/preprocessed_dataset_new'),
-        "path_bfm": os.path.join(os.getenv("FP", ""), "basel_facemodel/model2017-1_face12_nomouth.h5"),
-        "path_uv": os.path.join(os.getenv("FP", ""), "basel_facemodel/face12.json"),
-        "device": "cuda"
-        }
 
 
 
-name = 'norm'
-opt.update({"dataset": 'FFHQ',
-        "dataroot_npy": os.path.join(os.getenv("DP"), 'FFHQ/preprocessed_dataset_new'),
-        "image_folder": os.path.join(os.getenv("DP"), 'FFHQ/images'),
-        "transform_mode": 'all',
-        "image_h": 128,
-        "image_w": 128,
-        "batch_size": 1,
-        "num_workers": 12,
-        "semantic_regions": list(range(1, 16)),
-        "keep_background": False,
-        "bg_color" : 'black',
-        "latent_dim": 256,
-        "texture_dim" : 128,
-        "texture_nc": 16,
-        "nc_feature2image": 64,
-        "feature2image_num_layers": 5,
-        "use_glo": False,
-        "glo_init":'pca',
-        "pca_file": os.path.join(os.getenv("BP"), 'datasets/pcaLatents.npy'),
-        "experiment_name": 'eval_NoNorm',
-        "use_NF": False,
-        "eval": True})
-
-
-def getModel(modelName, opt):
+def getModel(modelName, opt, test):
     mp_path = '/cluster/project/infk/hilliges/koenigma/Final_Models'
-    #mp_path = '/home/matthias/ETH/Thesis/Final_Models'
+    if(test):
+        mp_path = '/home/matthias/ETH/Thesis/Final_Models'
     if (modelName == 'default'):
         folder = os.path.join(mp_path, 'default/checkpoints')
         opt.update({"checkpoint": os.path.join(folder, 'epoch=43-step=377079.ckpt'),
@@ -149,15 +116,18 @@ def getStandards(valModel):
                    'LPIPS': lpips}
         writetoFile(valDict, 'standards.json')
 
-def getFID(valModel, interpolated=None, shape='constant', sampling=None):
+def getFID(valModel, test=True, interpolated=None, shape='constant', sampling=None):
         filename = 'FID_'+shape+'_interpolated_'+str(interpolated)+'_sampling_'+str(sampling)+'.json'
         print(filename)
-        valModel.inference_ffhq('fid',n=10000,interpolated=interpolated, shape=shape, sampling=sampling)
+        n = 10000
+        if(test):
+            n=5
+        valModel.inference_ffhq('fid',n=n,interpolated=interpolated, shape=shape, sampling=sampling)
         fid = vals.fid_std
         valDict = {'FID': fid}
-        writetoFile(valDict, filename)
+        writetoFile(valDict, filename, test)
 
-def writetoFile(valDict, metric):
+def writetoFile(valDict, metric, test):
         path = os.path.dirname(opt_new.checkpoint)
         JSON = json.dumps(valDict)
         # open file for writing, "w"
@@ -165,26 +135,63 @@ def writetoFile(valDict, metric):
         f = open(os.path.join(path, filename), "w")
 
         # write json object to file
-        f.write(JSON)
+        if(not test):
+            f.write(JSON)
+def getOpt():
+    opt = {
 
-model_names=['default', 'norm', 'nonorm', 'nf_glo_alternate', 'nf_glo_joint']
-model_names=['default', 'nf_glo_alternate', 'nf_glo_joint']
-"""Run 1: Joint: [const, sampled][linear, spherical][normal]"""
-"""Run 1: NoNorm: [const, sampled] [linear, spherical] [latent] ++ [const/sampled, sph, sampled]"""
-model_names=['nonorm']
-for modelName in model_names:
-        print("Validating Model "+ modelName + '...')
-        opt = getModel(modelName,opt)
-        opt_new = ObjectDict(opt)
-        vals = validation.Validation(opt)
-        #getStandards(vals)
-        shapes = ['constant', 'sampled']
-        interpolateds = ['linear', 'spherical']
-        samplings = ['latent', 'sampled']
-        sampling = 'latent'
-        for interpolated in interpolateds:
-            for shape in shapes:
-                getFID(vals, interpolated=interpolated, shape=shape, sampling= sampling)
-        # getFID(vals, interpolated='spherical', shape='constant', sampling= 'sampled')
-        # getFID(vals, interpolated='spherical', shape='sampled', sampling= 'sampled')
-#out = vals.sample()
+        # "checkpoint": os.path.join(os.getenv("CP", "pretrained/ep44.ckpt")),
+        # "checkpoint": Res128_nonorm_path,
+        "dataroot_npy": os.path.join(os.getenv("DP", ""), 'FFHQ/preprocessed_dataset_new'),
+        "path_bfm": os.path.join(os.getenv("FP", ""), "basel_facemodel/model2017-1_face12_nomouth.h5"),
+        "path_uv": os.path.join(os.getenv("FP", ""), "basel_facemodel/face12.json"),
+        "device": "cuda"
+    }
+
+    opt.update({"dataset": 'FFHQ',
+                "dataroot_npy": os.path.join(os.getenv("DP"), 'FFHQ/preprocessed_dataset_new'),
+                "image_folder": os.path.join(os.getenv("DP"), 'FFHQ/images'),
+                "transform_mode": 'all',
+                "image_h": 128,
+                "image_w": 128,
+                "batch_size": 1,
+                "num_workers": 12,
+                "semantic_regions": list(range(1, 16)),
+                "keep_background": False,
+                "bg_color": 'black',
+                "latent_dim": 256,
+                "texture_dim": 128,
+                "texture_nc": 16,
+                "nc_feature2image": 64,
+                "feature2image_num_layers": 5,
+                "use_glo": False,
+                "glo_init": 'pca',
+                "pca_file": os.path.join(os.getenv("BP"), 'datasets/pcaLatents.npy'),
+                "experiment_name": 'eval_NoNorm',
+                "use_NF": False,
+                "eval": True})
+    return opt
+if __name__ == "__main__":
+    model_names=['default', 'norm', 'nonorm', 'nf_glo_alternate', 'nf_glo_joint']
+    model_names=['default', 'nf_glo_alternate', 'nf_glo_joint']
+    """Run 1: Joint: [const, sampled][linear, spherical][normal]"""
+    """Run 1: NoNorm: [const, sampled] [linear, spherical] [latent] ++ [const/sampled, sph, sampled]"""
+    test = False
+    if(test):
+        print("Testing Run of validation")
+    model_names=['default', 'norm']
+    for modelName in model_names:
+            print("Validating Model "+ modelName + '...')
+            opt = getOpt()
+            opt = getModel(modelName,opt, test)
+            opt_new = ObjectDict(opt)
+            vals = validation.Validation(opt)
+            #getStandards(vals)
+            shapes = ['constant', 'sampled']
+            shape = 'sampled'
+            interpolateds = ['linear', 'spherical']
+            samplings = ['latent', 'sampled']
+            for sampling in samplings:
+                for interpolated in interpolateds:
+                    getFID(vals, interpolated=interpolated, shape=shape, sampling= sampling)
+    #out = vals.sample()

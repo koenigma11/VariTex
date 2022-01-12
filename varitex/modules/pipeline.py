@@ -94,7 +94,7 @@ class PipelineModule(CustomModule):
         return o
 
     def forward(self, batch, batch_idx, std_multiplier=1):
-        if(self.opt.use_glo):
+        if(self.opt.use_glo and not batch_idx==-1):
             if(batch_idx==0):
                 ## Take some norm snapshots for later visualization
                 folder = 'norm_snapshots'

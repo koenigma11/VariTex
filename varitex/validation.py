@@ -1,5 +1,5 @@
 import pdb
-
+import os
 import imageio
 import torch
 import numpy as np
@@ -73,16 +73,16 @@ class Validation:
             transforms.append(MaskedAffineAutoregressiveTransform(features=256,
                                                                   hidden_features=256))
         transform = CompositeTransform(transforms)
-        # if(self.opt.experiment_name=='eval_norm'):
-        #     currentPath = '/home/matthias/ETH/Thesis/Final_Models/GLO_Norm/checkpoints/final_norm.ckpt'
-        #     currentDicts = torch.load(currentPath)
-        #     self.flow = Flow(transform, base_dist)
-        #     self.flow.load_state_dict(currentDicts['model_state_dict'])
-        # elif(self.opt.experiment_name=='eval_nonorm'):
-        #     currentPath = '/home/matthias/ETH/Thesis/Final_Models/GLO_NoNorm/checkpoints/final_nonorm.ckpt'
-        #     currentDicts = torch.load(currentPath)
-        #     self.flow = Flow(transform, base_dist)
-        #     self.flow.load_state_dict(currentDicts['model_state_dict'])
+        if(self.opt.experiment_name=='eval_norm'):
+            currentPath = '/home/matthias/ETH/Thesis/Final_Models/GLO_Norm/checkpoints/final_norm.ckpt'
+            currentDicts = torch.load(currentPath)
+            self.flow = Flow(transform, base_dist)
+            self.flow.load_state_dict(currentDicts['model_state_dict'])
+        elif(self.opt.experiment_name=='eval_nonorm'):
+            currentPath = '/home/matthias/ETH/Thesis/Final_Models/GLO_NoNorm/checkpoints/final_nonorm.ckpt'
+            currentDicts = torch.load(currentPath)
+            self.flow = Flow(transform, base_dist)
+            self.flow.load_state_dict(currentDicts['model_state_dict'])
 
 
 
@@ -95,22 +95,27 @@ class Validation:
             "Running inference on FFHQ. Using the extracted face model parameters and poses, and predicted latent codes.")
 
         self.metric_fid_std = FID()
-        self.metric_fid_interpolated = FID()
+        #self.metric_fid_interpolated = FID()
         self.psnr = []
         self.ssim = []
         self.lpips = []
         self.fid_std = 0
-        for i, batch in tqdm(enumerate(self.dataloader)):
-            if(not(shape ==  None)):
-                batch = self.getBatch(batch, mode=shape)
-                if(not(interpolated ==  None)):
-                    batch = self.interpolate(batch, interpolationMode=interpolated, sampling=sampling)
-            if(metric=='fid' and self.opt.experiment_name=='eval_Default' and not(interpolated ==  None)):
+        fakes = []
+        batch_idx = -1
+        for i, batchGT in tqdm(enumerate(self.dataloader)):
+            # if(not(shape ==  None)):
+            #     batch = self.getShape(batch, mode=shape)
+            #     if(not(interpolated ==  None)):
+            batch = {}
+            batch = self.getShape(batch, mode=shape)
+            batch = self.interpolate(batch, interpolationMode=interpolated, sampling=sampling)
+            if(self.opt.experiment_name=='eval_Default' and not(interpolated ==  None)):
                 batch = self.model.forward_latent2image(batch, 0)
             else:
-                batch = self.model.forward(batch, i, std_multiplier=0)
+                batch = self.model.forward(batch, -1, std_multiplier=0)
             fake = batch[DIK.IMAGE_OUT]
-            real = batch[DIK.IMAGE_IN]
+            real = batchGT[DIK.IMAGE_IN]
+            fakes.append(fake.detach().cpu().numpy())
 
             if(metric=='standards'):
                 """Standard Metrics"""
@@ -124,11 +129,14 @@ class Validation:
                 self.metric_fid_std.fid.update(fake.to(torch.uint8).cpu(), real=False)
 
             """PPL"""
-
+            if(n%10000==0):
+                fakes.append(fake)
             if(i*self.opt.batch_size>n):
                 break
         if(metric=='fid'):
             self.fid_std = self.metric_fid_std.fid.compute().item()
+        imgsFileName = shape +'_'+interpolated+'_'+sampling+'.npy'
+        np.save(os.path.join(os.path.dirname(self.opt.checkpoint),imgsFileName), np.array(fakes))
 
     def get_model(self, opt):
         model = PipelineModule.load_from_checkpoint(opt.checkpoint, opt=opt, strict=False)
@@ -136,7 +144,7 @@ class Validation:
         model = model.cuda()
         return model
 
-    def getBatch(self, batch, mode=None):
+    def getShape(self, batch, mode=None):
         if(mode == 'constant'):
             self.sp = torch.zeros((1, 199)).to(self.device)
             self.ep = torch.zeros((1, 100)).to(self.device)  # expressions[index_ep].unsqueeze(0)
@@ -157,6 +165,8 @@ class Validation:
             batch[DIK.COEFF_EXPRESSION] = batch2[DIK.COEFF_EXPRESSION]
             batch[DIK.T] = self.t
             batch[DIK.UV_RENDERED] = batch2[DIK.UV_RENDERED]
+        else:
+            print("Given Shape mode not recognized")
         return batch
     def interpolate(self,batch, interpolationMode='linear', sampling='latent',shape='constant'):
         batch1 = self.sample(sampling=sampling, shape=shape)
@@ -175,7 +185,7 @@ class Validation:
             if(sampling == 'latent'):
                 idx = np.random.randint(0,self.dataset.N-2,(1,1)).squeeze()
                 batch = self.dataloader.dataset.get_unsqueezed(idx)
-                batch = self.model.generator.forward_encode(batch, 0)  # Only encoding, not yet a distribution
+                batch = self.model.generator.forward_encode(batch, -1)  # Only encoding, not yet a distribution
                 batch = self.model.generator.forward_encoded2latent_distribution(batch)  # Compute mu and std
                 q = torch.distributions.Normal(batch[DIK.STYLE_LATENT_MU], batch[DIK.STYLE_LATENT_STD] * 1)
                 z = q.rsample()
@@ -214,9 +224,10 @@ class Validation:
                 batch = self.dataloader.dataset.get_unsqueezed(idx)
                 batch[DIK.STYLE_LATENT] = self.model.Z.weight[idx]
             else:
+                print("Doing Sampled Testing")
                 batch = {}
                 batch[DIK.STYLE_LATENT] = self.model.flow.sample(1).to(self.device)
-        batch = self.getBatch(batch, mode = shape)
+        batch = self.getShape(batch, mode = shape)
         return batch
 
     def sampleInterpolated(self, num_samples):
