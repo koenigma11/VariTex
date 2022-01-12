@@ -80,7 +80,7 @@ class Validation:
             self.flow = Flow(transform, base_dist)
             self.flow.load_state_dict(currentDicts['model_state_dict'])
         elif(self.opt.experiment_name=='eval_nonorm'):
-            currentPath = '/home/matthias/ETH/Thesis/Final_Models/GLO_NoNorm/checkpoints/final_nonorm.ckpt'
+            currentPath = os.path.join(os.getenv("MP"),'/GLO_NoNorm/checkpoints/final_nonorm.ckpt')
             currentDicts = torch.load(currentPath)
             self.flow = Flow(transform, base_dist)
             self.flow.load_state_dict(currentDicts['model_state_dict'])
