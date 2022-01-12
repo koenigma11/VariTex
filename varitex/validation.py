@@ -63,8 +63,8 @@ class Validation:
         self.ep = torch.zeros((1,100)).to(self.device)#expressions[index_ep].unsqueeze(0)
         self.theta = torch.Tensor((0, 0, 0)).to(self.device)
         self.t = torch.Tensor([0, -2, -57]).to(self.device)
-        #self.uv_factory_bfm = BFMUVFactory(opt=self.opt, use_bfm_gpu=self.opt.device == 'cuda')
-        #self.visualizer_complete = CompleteVisualizer(opt=self.opt, bfm_uv_factory=self.uv_factory_bfm)
+        self.uv_factory_bfm = BFMUVFactory(opt=self.opt, use_bfm_gpu=self.opt.device == 'cuda')
+        self.visualizer_complete = CompleteVisualizer(opt=self.opt, bfm_uv_factory=self.uv_factory_bfm)
         self.flow=None
         base_dist = StandardNormal(shape=[256])
         transforms = []
@@ -225,7 +225,6 @@ class Validation:
                 #batch = self.dataloader.dataset.get_unsqueezed(idx)
                 STL = self.model.Z.weight[idx]
             else:
-                print("Doing Sampled Testing")
                 # batch = {}
                 # batch[DIK.STYLE_LATENT] = self.model.flow.sample(1).to(self.device)
                 STL = self.model.flow.sample(1).to(self.device)

@@ -193,7 +193,7 @@ if __name__ == "__main__":
             shape = 'sampled'
             interpolateds = ['linear', 'spherical']
             samplings = ['latent', 'sampled']
-            samplings = ['sampled','latent']
+            samplings = ['latent']
             for sampling in samplings:
                 for interpolated in interpolateds:
                     getFID(vals, test= test, interpolated=interpolated, shape=shape, sampling= sampling)
