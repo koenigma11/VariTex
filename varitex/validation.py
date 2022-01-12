@@ -230,7 +230,6 @@ class Validation:
                 # batch[DIK.STYLE_LATENT] = self.model.flow.sample(1).to(self.device)
                 STL = self.model.flow.sample(1).to(self.device)
         #batch = self.getShape(batch, mode = shape)
-        del batch
         return STL
 
     def sampleInterpolated(self, num_samples):
