@@ -194,5 +194,5 @@ if __name__ == "__main__":
             samplings = ['latent', 'sampled']
             for sampling in samplings:
                 for interpolated in interpolateds:
-                    getFID(vals, interpolated=interpolated, shape=shape, sampling= sampling)
+                    getFID(vals, test= test, interpolated=interpolated, shape=shape, sampling= sampling)
     #out = vals.sample()

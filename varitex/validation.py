@@ -74,7 +74,8 @@ class Validation:
                                                                   hidden_features=256))
         transform = CompositeTransform(transforms)
         if(self.opt.experiment_name=='eval_norm'):
-            currentPath = '/home/matthias/ETH/Thesis/Final_Models/GLO_Norm/checkpoints/final_norm.ckpt'
+            print('Path: ', os.getenv("MP"))
+            currentPath = os.path.join(os.getenv("MP"),'GLO_Norm/checkpoints/final_norm.ckpt')
             currentDicts = torch.load(currentPath)
             self.flow = Flow(transform, base_dist)
             self.flow.load_state_dict(currentDicts['model_state_dict'])
@@ -109,6 +110,8 @@ class Validation:
             batch = {}
             batch = self.getShape(batch, mode=shape)
             batch = self.interpolate(batch, interpolationMode=interpolated, sampling=sampling)
+            if (len(batch[DIK.STYLE_LATENT].shape) == 1):
+                batch[DIK.STYLE_LATENT] = batch[DIK.STYLE_LATENT].unsqueeze(0)
             if(self.opt.experiment_name=='eval_Default' and not(interpolated ==  None)):
                 batch = self.model.forward_latent2image(batch, 0)
             else:
