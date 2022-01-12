@@ -180,6 +180,7 @@ if __name__ == "__main__":
     if(test):
         print("Testing Run of validation")
     model_names=['default', 'norm']
+    model_names=['nonorm', 'nf_glo_joint']
     for modelName in model_names:
             print("Validating Model "+ modelName + '...')
             opt = getOpt()
