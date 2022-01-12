@@ -194,7 +194,7 @@ class Validation:
             else:
                 ## normal
                 batch = {}
-                batch[DIK.STYLE_LATENT] = torch.randn(size=(1,256)).to(self.device)
+                STL = torch.randn(size=(1,256)).to(self.device)
         elif(modelName == 'eval_norm'):
             if(sampling == 'latent'):
                 idx = np.random.randint(0,self.dataset.N-2,(1,1)).squeeze()
